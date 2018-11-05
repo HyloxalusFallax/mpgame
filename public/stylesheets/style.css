@@ -1,0 +1,37 @@
+body{
+	color: silver;
+	background-color: #181818;
+}
+button{
+	background-color: #404040;
+	color: silver;
+	border: 1px solid grey;
+	font-size: 20px;
+	padding: 4px;
+}
+input{
+	background-color: #404040;
+	color: silver;
+	border: 1px solid grey;
+	font-size: 20px;
+	padding: 4px;
+}
+.centerContainer{
+	background-color: #202020;
+	width: 320px;
+	padding: 10px;
+	border: 1px solid #404040;
+}
+#roomsList{
+	height: 200px;
+	width: 300px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+.deleteRoomLink{
+	
+}
+
+.deleteRoomLink:hover{
+	background-color: #404040;
+}
