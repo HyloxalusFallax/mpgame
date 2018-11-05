@@ -8,6 +8,7 @@ button{
 	border: 1px solid grey;
 	font-size: 20px;
 	padding: 4px;
+	cursor: pointer;
 }
 input{
 	background-color: #404040;
@@ -19,19 +20,23 @@ input{
 .centerContainer{
 	background-color: #202020;
 	width: 320px;
-	padding: 10px;
+	padding: 10px 0px 0px 0px;
 	border: 1px solid #404040;
 }
 #roomsList{
+	font-size: 18px;
 	height: 200px;
 	width: 300px;
 	overflow-y: auto;
 	overflow-x: hidden;
 }
-.deleteRoomLink{
-	
-}
 
 .deleteRoomLink:hover{
+	cursor: pointer;
+	background-color: #404040;
+}
+
+.roomName:hover{
+	cursor: pointer;
 	background-color: #404040;
 }

@@ -1,5 +1,12 @@
-doctype html
-html
-	head
-	body
-		p something
+extends layout
+
+block content
+	div(align='center')
+		h1 Game
+		div(class='centerContainer')
+			div(id='roomsList', align='left')
+			form(id='addRoomForm')
+				input(id ='newRoomName', type='text', placeholder='New room name')
+				button(type='submit', id='addRoom') Add room
+
+	script(src='/javascripts/index.js')
