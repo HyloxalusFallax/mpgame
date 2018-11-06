@@ -36,7 +36,32 @@ input{
 	background-color: #404040;
 }
 
+.roomName:link{
+	color: silver;
+	text-decoration: none;
+}
+
+ .roomName:visited{
+	color: silver;
+ }
+
 .roomName:hover{
 	cursor: pointer;
 	background-color: #404040;
+}
+
+#usernameForm{
+	background-color: #404040;
+}
+
+#usernameInput{
+	width: 70%;
+}
+
+#usernameSubmit{
+	width: 25%;
+}
+
+.close-modal{
+	display: none !important;
 }

@@ -9,10 +9,9 @@ getRoomList();
 function deleteRoom(roomName){
 	return function(event) {
 		event.preventDefault();
-		console.log('triedToDeleteTheRoom: ' + roomName);
 		$.ajax({
 			type: 'DELETE',
-			url: '/rooms/' + roomName,
+			url: '/room/' + roomName,
 			success: function(response) {
 				getRoomList();
 			},
@@ -24,13 +23,6 @@ function deleteRoom(roomName){
 	}
 }
 
-function connectToARoom(roomName){
-	return function(event) {
-		event.preventDefault();
-		console.log('triedToConnectToTheRoom: ' + roomName);
-	}
-};
-
 function getRoomList(){
 	$('#roomsList').empty();
 	$.ajax({
@@ -38,12 +30,12 @@ function getRoomList(){
         url: '/rooms',
         success: function(response) {
 			const rooms = response.rooms;
-			console.log(response);
 			for(var i = 0; i < rooms.length; i++){
 				const roomName = $('<a></a>').text(rooms[i].name);
 				roomName.attr('class', 'roomName');
 				roomName.attr('style', 'flex: 90%');
-				roomName.click(connectToARoom(rooms[i].name));
+				roomName.attr('href', '/room/' + rooms[i].name);
+				//roomName.click(connectToARoom(rooms[i].name));
 				const delLink = $('<a></a>').text('X');
 				delLink.attr('class', 'deleteRoomLink');
 				delLink.click(deleteRoom(rooms[i].name));
