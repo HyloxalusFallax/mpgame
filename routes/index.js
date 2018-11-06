@@ -43,7 +43,14 @@ router.post('/room', async (req, res) => {
 
 router.get('/rooms', async (req, res) => {
 	try {
-		res.status(200).json({rooms: router.use.rooms});
+		var safeRooms = [];
+		for (var i = 0; i < router.use.rooms.length; i++){
+			safeRooms.push({name: router.use.rooms[i].name, players: []});
+			for (var j = 0; j < router.use.rooms[i].players.length; j++){
+				safeRooms[i].players.push({username: router.use.rooms[i].players[j].username})
+			}
+		}
+		res.status(200).json({rooms: safeRooms});
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({error: 'Iternal error!'});
