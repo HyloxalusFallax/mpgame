@@ -1,7 +1,13 @@
 extends layout
 
 block content
-	h1 Room
-
+	div(id='maincont')
+		div(id='game')
+		div(id='chat')
+			div(id='chatbox')
+			form(id='chatForm')
+				input(id='messageInput', type='text', placeholder='Enter message here')
+				button(type='submit', id='sendMessageBtn') Send
+	
 	script(src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js')
 	script(src='/javascripts/room.js')

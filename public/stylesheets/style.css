@@ -1,6 +1,9 @@
-body{
+html, body {
 	color: silver;
 	background-color: #181818;
+	height: 100%;
+    width: 100%;
+	margin: 0;
 }
 button{
 	background-color: #404040;
@@ -64,4 +67,47 @@ input{
 
 .close-modal{
 	display: none !important;
+}
+
+#maincont{
+	display: flex;
+	flex-flow: rows;
+	height: 100%;
+}
+
+#game{
+	flex: 70%;
+	flex-grow: 1;
+	border: 3px solid grey;
+}
+
+#chat{
+	flex: 30%;
+	flex-grow: 1;
+	display: flex;
+	flex-flow: column;
+	height: 100%;
+	background-color: #303030;
+}
+
+#chatbox{
+	flex: 95%;
+	flex-grow: 1;
+	display: flex;
+	overflow: auto;
+}
+
+#chatForm{
+	flex: 5%;
+	flex-grow: 1;
+	display: flex;
+}
+
+#messageInput{
+	width: 100%;
+}
+
+#sendMessageBtn{
+	width: 20%;
+	background-color: #505050;
 }

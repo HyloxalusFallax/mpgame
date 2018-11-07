@@ -33,16 +33,17 @@ function getRoomList(){
 			for(var i = 0; i < rooms.length; i++){
 				const roomName = $('<a></a>').text(rooms[i].name);
 				roomName.attr('class', 'roomName');
-				roomName.attr('style', 'flex: 90%');
+				roomName.attr('style', 'flex: 80%');
 				roomName.attr('href', '/room/' + rooms[i].name);
-				//roomName.click(connectToARoom(rooms[i].name));
+				const players = $('<a></a>').text(rooms[i].players.length +'/' + response.players_limit);
+				players.attr('style', 'flex: 10%');
 				const delLink = $('<a></a>').text('X');
 				delLink.attr('class', 'deleteRoomLink');
 				delLink.click(deleteRoom(rooms[i].name));
 				const flexDiv = $('<div></div>');
 				flexDiv.attr('class', 'roomListRow');
 				flexDiv.attr('style', 'display: flex');
-				flexDiv.append(roomName, delLink)
+				flexDiv.append(roomName, players, delLink)
 				$('#roomsList').append(flexDiv);
 			}
 		},

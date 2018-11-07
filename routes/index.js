@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 router.use.rooms_limit = 10;
-router.use.players_limit = 2;
+router.use.players_limit = 10;
 router.use.rooms = [];
 
 /* GET home page. */
@@ -50,7 +50,7 @@ router.get('/rooms', async (req, res) => {
 				safeRooms[i].players.push({username: router.use.rooms[i].players[j].username})
 			}
 		}
-		res.status(200).json({rooms: safeRooms});
+		res.status(200).json({rooms: safeRooms, players_limit: router.use.players_limit});
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({error: 'Iternal error!'});
