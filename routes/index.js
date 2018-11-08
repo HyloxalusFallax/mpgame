@@ -9,7 +9,7 @@ router.use.rooms_limit = 10;
 router.use.players_limit = 10;
 router.use.rooms = [];
 
-class Comment {
+router.use.Message = class Message {
 	constructor({author = null, body = '', date = new Date(), room = null, command = 'post message'}){
 		this.author = author;
 		this.body = body;
@@ -29,7 +29,7 @@ const getChannel = async () => {
 	}
 };
 
-const channel = getChannel();
+router.use.channel = getChannel();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -59,10 +59,10 @@ router.post('/room', async (req, res) => {
 						detached: true,
 						shell: true
 					});
-					const ch = await channel;
+					const ch = await router.use.channel;
 					ch.assertQueue('chat/' + newRoomName, {durable: false});
-					const comment = new Comment({body: 'Room ' + newRoomName + ' has been created.', room: newRoomName});
-					ch.sendToQueue('chat/' + newRoomName, Buffer.from(JSON.stringify(comment)));
+					const message = new router.use.Message({body: 'Room ' + newRoomName + ' has been created', room: newRoomName});
+					ch.sendToQueue('chat/' + newRoomName, Buffer.from(JSON.stringify(message)));
 					router.use.rooms.push({name: newRoomName, players: []});
 					res.sendStatus(201);
 				}
@@ -93,7 +93,7 @@ router.get('/rooms', async (req, res) => {
 router.get('/room/:roomName', async (req, res) => {
 	try {
 		const roomName = req.params.roomName;
-		roomNumber = -1;
+		var roomNumber = -1;
 		for(var i = 0; i < router.use.rooms.length; i++) {
 			if (router.use.rooms[i].name === roomName) {
 				roomNumber = i;
@@ -124,11 +124,11 @@ router.delete('/room/:roomName', async(req, res) => {
 		if (roomIndex === -1)
 			res.status(400).json({error: 'Wrong room name!'});
 		else {
-			const comment = new Comment({body: 'Room ' + roomName + ' has been closed.', room: roomName});
+			const message = new router.use.Message({body: 'Room ' + roomName + ' has been closed', room: roomName});
 			const queue = 'chat/' + router.use.rooms[roomIndex].name;
-			const ch = await channel;
-			ch.sendToQueue(queue, Buffer.from(JSON.stringify(comment)));
-			ch.sendToQueue(queue, Buffer.from(JSON.stringify(new Comment({command: 'stop'}))));
+			const ch = await router.use.channel;
+			ch.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
+			ch.sendToQueue(queue, Buffer.from(JSON.stringify(new router.use.Message({command: 'stop'}))));
 			router.use.rooms.splice(i, 1);
 			res.sendStatus(200);
 		}

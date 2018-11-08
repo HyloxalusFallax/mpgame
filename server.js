@@ -56,37 +56,8 @@ server.listen(3000, function() {
 });
 
 io.on('connection', (socket) => {
-	socket.on('registration', (msg) => {
-		var roomIndex = -1;
-		for(var i = 0; i < router.use.rooms.length; i++) {
-			if (router.use.rooms[i].name === msg.roomName) {
-				roomIndex = i;
-				break;
-			}
-		}
-		if (roomIndex === -1) {
-			io.to(socket.id).emit('registration', 'Wrong room name!');
-		} else {
-			if (router.use.rooms[roomIndex].players.length > router.use.players_limit) {
-				io.to(socket.id).emit('registration', 'Too much players in this room!');
-			} else {
-				var isUsernameUnique = true;
-				for (var i = 0; i < router.use.rooms[roomIndex].players.length; i++){
-					if (router.use.rooms[roomIndex].players[i].username === msg.username){
-						isUsernameUnique = false;
-						break;
-					}
-				}
-				if (!isUsernameUnique){
-					io.to(socket.id).emit('registration', 'There is already exist a player with this name in the room!');
-				} else {
-					router.use.rooms[roomIndex].players.push({username: msg.username, id: socket.id});
-					console.log('Player ' + msg.username + ' connected to the room ' + msg.roomName);
-					io.to(socket.id).emit('registration', 'ok');
-				}
-			}
-		}
-		socket.on('disconnect', () => {
+	socket.on('registration', async (msg) => {
+		try {
 			var roomIndex = -1;
 			for(var i = 0; i < router.use.rooms.length; i++) {
 				if (router.use.rooms[i].name === msg.roomName) {
@@ -94,15 +65,46 @@ io.on('connection', (socket) => {
 					break;
 				}
 			}
-			if (roomIndex != -1) {
-				for (var i = 0; i < router.use.rooms[roomIndex].players.length; i++){
-					if (socket.id === router.use.rooms[roomIndex].players[i].id){
-						console.log('Player ' + router.use.rooms[roomIndex].players[i].username + ' disconnected from the room ' + router.use.rooms[roomIndex].name);
-						router.use.rooms[roomIndex].players.splice(i, 1);
+			if (roomIndex === -1) {
+				io.to(socket.id).emit('registration', 'Wrong room name!');
+			} else {
+				if (router.use.rooms[roomIndex].players.length > router.use.players_limit) {
+					io.to(socket.id).emit('registration', 'Too much players in this room!');
+				} else {
+					var isUsernameUnique = true;
+					for (var i = 0; i < router.use.rooms[roomIndex].players.length; i++) {
+						if (router.use.rooms[roomIndex].players[i].username === msg.username) {
+							isUsernameUnique = false;
+							break;
+						}
+					}
+					if (!isUsernameUnique){
+						io.to(socket.id).emit('registration', 'There is already exist a player with this name in the room!');
+					} else {
+						router.use.rooms[roomIndex].players.push({username: msg.username, id: socket.id});
+						const ch = await router.use.channel;
+						const message = new router.use.Message({body: 'Player ' + msg.username + ' connected to the room', room: msg.roomName});
+						ch.assertQueue('chat/' + msg.roomName, {durable: false});
+						ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify(message)));
+						console.log('Player ' + msg.username + ' connected to the room ' + msg.roomName);
+						io.to(socket.id).emit('registration', 'ok');
+						socket.on('disconnect', () => {
+							for (var i = 0; i < router.use.rooms[roomIndex].players.length; i++){
+								if (socket.id === router.use.rooms[roomIndex].players[i].id) {
+									console.log('Player ' + router.use.rooms[roomIndex].players[i].username + ' disconnected from the room ' + router.use.rooms[roomIndex].name);
+									const message = new router.use.Message({body: 'Player ' + msg.username + ' disconnected from the room', room: msg.roomName});
+									ch.assertQueue('chat/' + msg.roomName, {durable: false});
+									ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify(message)));
+									router.use.rooms[roomIndex].players.splice(i, 1);
+								}
+							}
+						});
 					}
 				}
 			}
-		});
+		} catch (err) {
+			console.log(err);
+		}
 	});
 });
 
