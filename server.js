@@ -1,12 +1,15 @@
-var express = require('express');
+'use strict'
+
+var express = require('express'),
 	http = require('http'),
 	path = require('path'),
 	createError = require('http-errors'),
 	cookieParser = require('cookie-parser'),
 	socketIO = require('socket.io'),
-	logger = require('morgan')
-	cote = require('cote'),
-	cookieParserIO = require('socket.io-cookie');;
+	logger = require('morgan'),
+	cookieParserIO = require('socket.io-cookie'),
+	amqp = require('amqplib/callback_api'),
+	child_process = require('child_process');
 
 var router = require('./routes/index');
 
@@ -41,26 +44,16 @@ app.use(function(err, req, res, next) {
 });
 
 app.set('port', 3000);
-//app.use('/static', express.static(__dirname + '/static'));
 
 var server = http.createServer(app),
 	io = socketIO(server);
 
 io.use(cookieParserIO);
-//io.use(authorization);
 
 // Starts the server.
 server.listen(3000, function() {
   console.log('Starting server on port 3000');
 });
-
-/* io.on('connection', function(socket){
-	const username = socket.request.headers.cookie.username
-	console.log(username + ' connected');
-	socket.on('disconnect', function(){
-		console.log(username + ' disconnected');
-	});
-}); */
 
 io.on('connection', (socket) => {
 	socket.on('registration', (msg) => {
@@ -112,3 +105,25 @@ io.on('connection', (socket) => {
 		});
 	});
 });
+
+/* console.log("something: " + process.argv[0]);
+
+const child = child_process.spawn(process.argv[0], ['chatRoom.js', 'something'], {
+	detached: true,
+	shell: true
+});
+
+
+child.on('exit', function (code, signal) {
+	console.log('child process exited');
+});
+
+amqp.connect('amqp://localhost', (err, conn) => {
+	conn.createChannel((err, ch) => {
+		var q = 'something';
+		var msg = 'Hello World!';
+		
+		ch.assertQueue(q, {durable: false});
+		ch.sendToQueue(q, Buffer.from(msg));
+	});
+}); */

@@ -1,9 +1,35 @@
-var express = require('express');
-var router = express.Router();
+'use strict'
 
+const express = require('express'),
+	  router = express.Router(),
+	  amqp = require('amqplib'),
+	  child_process = require('child_process');
+	  
 router.use.rooms_limit = 10;
 router.use.players_limit = 10;
 router.use.rooms = [];
+
+class Comment {
+	constructor({author = null, body = '', date = new Date(), room = null, command = 'post message'}){
+		this.author = author;
+		this.body = body;
+		this.date = date;
+		this.room = room;
+		this.command = command;
+	}
+}
+
+const getChannel = async () => {
+	try {
+		const conn = await amqp.connect('amqp://localhost');
+		const channel = await conn.createChannel();
+		return channel;
+	} catch (err) {
+		console.log(err);
+	}
+};
+
+const channel = getChannel();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -12,28 +38,35 @@ router.get('/', function(req, res, next) {
 
 router.post('/room', async (req, res) => {
 	try {
-		newRoomName = req.body.roomName;
-		if (router.use.rooms.length <= router.use.rooms_limit){
-				if ((newRoomName != "") && (newRoomName != undefined)){
-					var is_unique = true;
-					for(var i = 0; i < router.use.rooms.length; i++) {
-						if (router.use.rooms[i].name === newRoomName){
-							is_unique = false;
-							break;
-						}
+		const newRoomName = req.body.roomName;
+		if (router.use.rooms.length > router.use.rooms_limit) {
+			res.status(400).json({error: 'Too much rooms!'}); 
+		} else {
+			if ((newRoomName == "") || (newRoomName === undefined)) {
+				res.status(400).json({error: 'Wrong room name!'});
+			} else {
+				var is_unique = true;
+				for(var i = 0; i < router.use.rooms.length; i++) {
+					if (router.use.rooms[i].name === newRoomName) {
+						is_unique = false;
+						break;
 					}
-					if (!is_unique){
-						res.status(400).send({error: 'Room with this name already exists!'});
-					} else {
-						router.use.rooms.push({name: req.body.roomName, players: []});
-						res.sendStatus(201);
-					}
-				} else {
-					res.status(400).json({error: 'Wrong room name!'});
 				}
-		}
-		else {
-			res.status(400).json({error: 'Too much rooms!'});
+				if (!is_unique) {
+					res.status(400).send({error: 'Room with this name already exists!'});
+				} else {
+					child_process.spawn(process.argv[0], ['chat.js', newRoomName], {
+						detached: true,
+						shell: true
+					});
+					const ch = await channel;
+					ch.assertQueue('chat/' + newRoomName, {durable: false});
+					const comment = new Comment({body: 'Room ' + newRoomName + ' has been created.', room: newRoomName});
+					ch.sendToQueue('chat/' + newRoomName, Buffer.from(JSON.stringify(comment)));
+					router.use.rooms.push({name: newRoomName, players: []});
+					res.sendStatus(201);
+				}
+			}
 		}
 	} catch (err) {
 		console.log(err);
@@ -78,12 +111,9 @@ router.get('/room/:roomName', async (req, res) => {
 	}
 });
 
-/* router.post('/room/:roomName', async (req, res) => {
+router.delete('/room/:roomName', async(req, res) => {
 	try {
-		const roomName = req.params.roomName,
-		      username = req.body.username,
-		      userId = req.body.userId;
-			  
+		const roomName = req.params.roomName;
 		var roomIndex = -1;
 		for(var i = 0; i < router.use.rooms.length; i++) {
 			if (router.use.rooms[i].name === roomName) {
@@ -94,44 +124,11 @@ router.get('/room/:roomName', async (req, res) => {
 		if (roomIndex === -1)
 			res.status(400).json({error: 'Wrong room name!'});
 		else {
-			if (router.use.rooms[roomIndex].players.length > router.use.players_limit) {
-				res.status(400).json({error: 'Too much players in this room!'});
-			} else {
-				var isUsernameUnique = true;
-				for (var i = 0; i < router.use.rooms[roomIndex].players.length; i++){
-					if (router.use.rooms[roomIndex].players[i] === username){
-						isUsernameUnique = false;
-						break;
-					}
-				}
-				if (!isUsernameUnique){
-					res.status(400).send({error: 'There is already exist a player with this name in the room!'});
-				} else {
-					router.use.rooms[roomIndex].players.push({username: username, id: userId});
-					console.log('Player ' + username + ' connected to the room ' + roomName);
-					res.sendStatus(200);
-				}
-			}
-		}
-	} catch (err) {
-		console.log(err);
-		res.status(500).json({error: 'Iternal error!'});
-	}
-}); */
-
-router.delete('/room/:roomName', async(req, res) => {
-	try {
-		const roomName = req.params.roomName;
-		roomIndex = -1;
-		for(var i = 0; i < router.use.rooms.length; i++) {
-			if (router.use.rooms[i].name === roomName) {
-				roomIndex = i;
-				break;
-			}
-		}
-		if (roomIndex === -1)
-			res.status(400).json({error: 'Wrong room name!'});
-		else {
+			const comment = new Comment({body: 'Room ' + roomName + ' has been closed.', room: roomName});
+			const queue = 'chat/' + router.use.rooms[roomIndex].name;
+			const ch = await channel;
+			ch.sendToQueue(queue, Buffer.from(JSON.stringify(comment)));
+			ch.sendToQueue(queue, Buffer.from(JSON.stringify(new Comment({command: 'stop'}))));
 			router.use.rooms.splice(i, 1);
 			res.sendStatus(200);
 		}
