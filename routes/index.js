@@ -10,12 +10,11 @@ router.use.players_limit = 10;
 router.use.rooms = [];
 
 router.use.Message = class Message {
-	constructor({author = null, body = '', date = new Date(), room = null, command = 'post message'}){
+	constructor({author = null, body = '', date = new Date(), room = null}) {
 		this.author = author;
 		this.body = body;
 		this.date = date;
 		this.room = room;
-		this.command = command;
 	}
 }
 
@@ -62,7 +61,7 @@ router.post('/room', async (req, res) => {
 					const ch = await router.use.channel;
 					ch.assertQueue('chat/' + newRoomName, {durable: false});
 					const message = new router.use.Message({body: 'Room ' + newRoomName + ' has been created', room: newRoomName});
-					ch.sendToQueue('chat/' + newRoomName, Buffer.from(JSON.stringify(message)));
+					ch.sendToQueue('chat/' + newRoomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
 					router.use.rooms.push({name: newRoomName, players: []});
 					res.sendStatus(201);
 				}
@@ -128,9 +127,9 @@ router.delete('/room/:roomName', async(req, res) => {
 			const queue = 'chat/' + router.use.rooms[roomIndex].name;
 			const ch = await router.use.channel;
 			ch.assertQueue(queue, {durable: false});
-			ch.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
+			ch.sendToQueue(queue, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
 			ch.assertQueue(queue, {durable: false});
-			ch.sendToQueue(queue, Buffer.from(JSON.stringify(new router.use.Message({command: 'stop'}))));
+			ch.sendToQueue(queue, Buffer.from(JSON.stringify({command: 'stop'})));
 			router.use.rooms.splice(i, 1);
 			res.sendStatus(200);
 		}

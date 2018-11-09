@@ -5,7 +5,7 @@ const mongoose = require('mongoose'),
 
 mongoose.connect('mongodb://localhost/mpgame', {useNewUrlParser: true});
 
-var conn, channel;
+var conn, channel, ch;
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', () => {
@@ -36,16 +36,26 @@ async function main() {
 async function processMessage(msg) {
 	try {
 		const data = JSON.parse(msg.content);
-		const date = new Date(data.date);
 		switch (data.command) {
 			case 'save message':
 				console.log('saving message');
-				const newMessage = new Message({author: data.author, room: data.room, body: data.body, date: date});
+				const date = new Date(data.message.date);
+				const newMessage = new Message({author: data.message.author, room: data.message.room, body: data.message.body, date: date});
 				await newMessage.save();
 				break;
 			case 'delete room':
 				console.log('deleting chat room');
 				await Message.deleteMany({room: data.room});
+				break;
+			case 'fetch chat':
+				console.log('fetching chat');
+				const result = await Message.find({room: data.room});
+				var safeResult = [];
+				for (var i = 0; i < result.length; i++)
+					safeResult.push({author: result[i].author, room: result[i].room, body: result[i].body, date: result[i].date});
+				ch = await channel;
+				await ch.assertQueue('chat/' + data.room, {durable: false});
+				await ch.sendToQueue('chat/' + data.room, Buffer.from(JSON.stringify({result: safeResult, client: data.client, command: 'fetched chat'})));
 				break;
 			case 'stop':
 				console.log('closing');

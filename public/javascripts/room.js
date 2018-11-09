@@ -3,6 +3,7 @@
 var socket = io();
 const roomName = window.location.pathname.split('/')[2];
 var username = '';
+var allMessages = [];
 
 $("#chatForm").submit(event => {
 	event.preventDefault();
@@ -43,15 +44,32 @@ function submitMessage() {
 }
 
 socket.on('registration', (msg) => {
-	console.log(msg);
 	if (msg === 'ok') {
 		$.modal.close();
+		socket.on('fetched chat', (chat) => {
+			allMessages = allMessages.concat(chat);
+			fillChat();
+		});
 	} else {
 		
 	}
 });
 
 socket.on('post message', (msg) => {
+	allMessages.push(msg);
+	fillChat();
+});
+
+function fillChat() {
+	$('#chatbox').empty();
+	allMessages.sort((a, b) => {
+		return new Date(a.date) > new Date(b.date);
+	});
+	for (var i = 0; i < allMessages.length; i++)
+		addMessage(allMessages[i]);
+}
+
+function addMessage(msg){
 	const time = new moment(msg.date).format("HH:mm:ss");
 	const message = $('<div></div>');
 	message.attr('class', 'message');
@@ -64,4 +82,4 @@ socket.on('post message', (msg) => {
 	else
 		message.append(body, timestamp);
 	$('#chatbox').append(message);
-});
+}

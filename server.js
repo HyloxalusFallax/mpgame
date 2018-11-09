@@ -83,11 +83,14 @@ io.on('connection', (socket) => {
 					} else {
 						router.use.rooms[roomIndex].players.push({username: msg.username, id: socket.id});
 						const ch = await router.use.channel;
-						const message = new router.use.Message({body: 'Player ' + msg.username + ' connected to the room', room: msg.roomName});
+						var message = {command: 'fetch chat', client: socket.id, room: router.use.rooms[roomIndex].name};
+						console.log('fetching chat');
 						ch.assertQueue('chat/' + msg.roomName, {durable: false});
 						ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify(message)));
+						message = new router.use.Message({body: 'Player ' + msg.username + ' connected to the room', room: msg.roomName});
+						ch.assertQueue('chat/' + msg.roomName, {durable: false});
+						ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
 						console.log('Player ' + msg.username + ' connected to the room ' + msg.roomName);
-						io.to(socket.id).emit('registration', 'ok');
 						socket.join(msg.roomName);
 						socket.on('disconnect', () => {
 							if (router.use.rooms[roomIndex] != null) {
@@ -96,7 +99,7 @@ io.on('connection', (socket) => {
 										console.log('Player ' + router.use.rooms[roomIndex].players[i].username + ' disconnected from the room ' + router.use.rooms[roomIndex].name);
 										const message = new router.use.Message({body: 'Player ' + msg.username + ' disconnected from the room', room: msg.roomName});
 										ch.assertQueue('chat/' + msg.roomName, {durable: false});
-										ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify(message)));
+										ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
 										router.use.rooms[roomIndex].players.splice(i, 1);
 										break;
 									}
@@ -127,12 +130,13 @@ io.on('connection', (socket) => {
 									io.to(socket.id).emit('post message', 'Wrong player name!');
 								} else {
 									const ch = await router.use.channel;
-									const message = new router.use.Message({author: msg.author, room: msg.room, body: msg.body, date: msg.date, command: 'post message'});
+									const message = new router.use.Message({author: msg.author, room: msg.room, body: msg.body, date: msg.date});
 									ch.assertQueue('chat/' + msg.room, {durable: false});
-									ch.sendToQueue('chat/' + msg.room, Buffer.from(JSON.stringify(message)));
+									ch.sendToQueue('chat/' + msg.room, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
 								}
 							}
 						});
+						io.to(socket.id).emit('registration', 'ok');
 					}
 				}
 			}
@@ -146,7 +150,7 @@ async function monitorMessages() {
 	try {
 		const ch = await router.use.channel;
 		await ch.assertQueue('mainServer', {durable: false});
-		await ch.consume('mainServer', processMessage, {noAck: true});
+		await ch.consume('mainServer', processMessage, {noAck: true, exclusive: true});
 	} catch(err) {
 		console.log(err);
 	}
@@ -158,7 +162,11 @@ async function processMessage(msg) {
 		switch (data.command) {
 			case 'post message':
 				console.log('posting message');
-				io.to(data.room).emit('post message', data);
+				io.to(data.message.room).emit('post message', data.message);
+				break;
+			case 'fetched chat':
+				console.log('fetched chat');
+				io.to(data.client).emit('fetched chat', data.result);
 				break;
 		}
 	} catch(err) {
