@@ -8,7 +8,7 @@ var express = require('express'),
 	socketIO = require('socket.io'),
 	logger = require('morgan'),
 	cookieParserIO = require('socket.io-cookie'),
-	amqp = require('amqplib/callback_api'),
+	amqp = require('amqplib'),
 	child_process = require('child_process');
 
 var router = require('./routes/index');
@@ -88,14 +88,48 @@ io.on('connection', (socket) => {
 						ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify(message)));
 						console.log('Player ' + msg.username + ' connected to the room ' + msg.roomName);
 						io.to(socket.id).emit('registration', 'ok');
+						socket.join(msg.roomName);
 						socket.on('disconnect', () => {
-							for (var i = 0; i < router.use.rooms[roomIndex].players.length; i++){
-								if (socket.id === router.use.rooms[roomIndex].players[i].id) {
-									console.log('Player ' + router.use.rooms[roomIndex].players[i].username + ' disconnected from the room ' + router.use.rooms[roomIndex].name);
-									const message = new router.use.Message({body: 'Player ' + msg.username + ' disconnected from the room', room: msg.roomName});
-									ch.assertQueue('chat/' + msg.roomName, {durable: false});
-									ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify(message)));
-									router.use.rooms[roomIndex].players.splice(i, 1);
+							if (router.use.rooms[roomIndex] != null) {
+								for (var i = 0; i < router.use.rooms[roomIndex].players.length; i++) {
+									if (socket.id === router.use.rooms[roomIndex].players[i].id) {
+										console.log('Player ' + router.use.rooms[roomIndex].players[i].username + ' disconnected from the room ' + router.use.rooms[roomIndex].name);
+										const message = new router.use.Message({body: 'Player ' + msg.username + ' disconnected from the room', room: msg.roomName});
+										ch.assertQueue('chat/' + msg.roomName, {durable: false});
+										ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify(message)));
+										router.use.rooms[roomIndex].players.splice(i, 1);
+										break;
+									}
+								}
+							}
+						});
+						socket.on('post message', async (msg) => {
+							var roomIndex = -1;
+							for(var i = 0; i < router.use.rooms.length; i++) {
+
+								if (router.use.rooms[i].name === msg.room) {
+									roomIndex = i;
+									break;
+								}
+							}
+							if (roomIndex === -1) {
+								io.to(socket.id).emit('post message', 'Wrong room name!');
+							} else {
+								var playerIndex = -1;
+								for (var i = 0; i < router.use.rooms[roomIndex].players.length; i++) {
+									if (socket.id === router.use.rooms[roomIndex].players[i].id) {
+										playerIndex = i;
+										break;
+									}
+								}
+								if (playerIndex === -1) {
+									console.log('Wrong player name!');
+									io.to(socket.id).emit('post message', 'Wrong player name!');
+								} else {
+									const ch = await router.use.channel;
+									const message = new router.use.Message({author: msg.author, room: msg.room, body: msg.body, date: msg.date, command: 'post message'});
+									ch.assertQueue('chat/' + msg.room, {durable: false});
+									ch.sendToQueue('chat/' + msg.room, Buffer.from(JSON.stringify(message)));
 								}
 							}
 						});
@@ -108,24 +142,28 @@ io.on('connection', (socket) => {
 	});
 });
 
-/* console.log("something: " + process.argv[0]);
+async function monitorMessages() {
+	try {
+		const ch = await router.use.channel;
+		await ch.assertQueue('mainServer', {durable: false});
+		await ch.consume('mainServer', processMessage, {noAck: true});
+	} catch(err) {
+		console.log(err);
+	}
+}
+	
+async function processMessage(msg) {
+	try {
+		const data = JSON.parse(msg.content);
+		switch (data.command) {
+			case 'post message':
+				console.log('posting message');
+				io.to(data.room).emit('post message', data);
+				break;
+		}
+	} catch(err) {
+		console.log(err);
+	}
+}
 
-const child = child_process.spawn(process.argv[0], ['chatRoom.js', 'something'], {
-	detached: true,
-	shell: true
-});
-
-
-child.on('exit', function (code, signal) {
-	console.log('child process exited');
-});
-
-amqp.connect('amqp://localhost', (err, conn) => {
-	conn.createChannel((err, ch) => {
-		var q = 'something';
-		var msg = 'Hello World!';
-		
-		ch.assertQueue(q, {durable: false});
-		ch.sendToQueue(q, Buffer.from(msg));
-	});
-}); */
+monitorMessages();

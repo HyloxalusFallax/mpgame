@@ -6,7 +6,7 @@ $("#addRoomForm").submit(event => {
 $("#addRoomForm").submit(submitRoomForm);
 getRoomList();
 
-function deleteRoom(roomName){
+function deleteRoom(roomName) {
 	return function(event) {
 		event.preventDefault();
 		$.ajax({
@@ -23,14 +23,14 @@ function deleteRoom(roomName){
 	}
 }
 
-function getRoomList(){
+function getRoomList() {
 	$('#roomsList').empty();
 	$.ajax({
 		type: 'GET',
         url: '/rooms',
         success: function(response) {
 			const rooms = response.rooms;
-			for(var i = 0; i < rooms.length; i++){
+			for(var i = 0; i < rooms.length; i++) {
 				const roomName = $('<a></a>').text(rooms[i].name);
 				roomName.attr('class', 'roomName');
 				roomName.attr('style', 'flex: 80%');
@@ -54,7 +54,7 @@ function getRoomList(){
 	});
 }
 
-function submitRoomForm(){
+function submitRoomForm() {
 	const formData = { 'roomName': $('#newRoomName').val() };
 	$.ajax({
 		type: 'POST',
@@ -68,4 +68,4 @@ function submitRoomForm(){
 			console.log(err.error);
 		}
 	});
-};
+}

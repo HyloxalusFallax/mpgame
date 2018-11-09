@@ -4,6 +4,12 @@ var socket = io();
 const roomName = window.location.pathname.split('/')[2];
 var username = '';
 
+$("#chatForm").submit(event => {
+	event.preventDefault();
+});
+
+$("#chatForm").submit(submitMessage);
+
 const usernameForm = $('<form></form>');
 usernameForm.attr('id', 'usernameForm');
 usernameForm.attr('class', 'modal');
@@ -31,6 +37,11 @@ function connectToARoomWithUsername(roomName) {
 	}
 }
 
+function submitMessage() {
+	const message = {author: username, room: roomName, body: $('#messageInput').val(), date: new Date()};
+	socket.emit('post message', message);
+}
+
 socket.on('registration', (msg) => {
 	console.log(msg);
 	if (msg === 'ok') {
@@ -40,3 +51,17 @@ socket.on('registration', (msg) => {
 	}
 });
 
+socket.on('post message', (msg) => {
+	const time = new moment(msg.date).format("HH:mm:ss");
+	const message = $('<div></div>');
+	message.attr('class', 'message');
+	const timestamp = $('<div></div>').attr('class', 'timestamp').text(time);
+	const author = $('<div></div>').attr('class', 'author').text(msg.author);
+	const body = $('<div></div>').attr('class', 'messageBody').text(msg.body);
+	if (msg.author != null){
+		message.append(author, $('<div></div>').text(':').attr('class', 'divider'), body, timestamp);
+	}
+	else
+		message.append(body, timestamp);
+	$('#chatbox').append(message);
+});

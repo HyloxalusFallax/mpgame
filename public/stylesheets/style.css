@@ -94,6 +94,7 @@ input{
 	flex: 95%;
 	flex-grow: 1;
 	display: flex;
+	flex-flow: column;
 	overflow: auto;
 }
 
@@ -110,4 +111,27 @@ input{
 #sendMessageBtn{
 	width: 20%;
 	background-color: #505050;
+}
+
+.message{
+	display: flex;
+	flex-flow: rows;
+}
+.timestamp{
+	flex-grow: 1;
+	flex: 10%;
+	text-align: right;
+	margin: 0px 10px 0px 0px;
+}
+.author{
+	color: white;
+	margin: 0px 0px 0px 0px;
+}
+.divider{
+	margin: 0px 10px 0px 0px;
+}
+.messageBody{
+	flex: 80%;
+	flex-grow: 1;
+	margin: 0px 0px 0px 0px;
 }

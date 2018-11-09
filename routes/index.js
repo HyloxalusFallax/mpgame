@@ -127,7 +127,9 @@ router.delete('/room/:roomName', async(req, res) => {
 			const message = new router.use.Message({body: 'Room ' + roomName + ' has been closed', room: roomName});
 			const queue = 'chat/' + router.use.rooms[roomIndex].name;
 			const ch = await router.use.channel;
+			ch.assertQueue(queue, {durable: false});
 			ch.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
+			ch.assertQueue(queue, {durable: false});
 			ch.sendToQueue(queue, Buffer.from(JSON.stringify(new router.use.Message({command: 'stop'}))));
 			router.use.rooms.splice(i, 1);
 			res.sendStatus(200);
