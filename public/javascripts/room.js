@@ -5,6 +5,7 @@ const roomName = window.location.pathname.split('/')[2];
 var username = '';
 var allMessages = [];
 var players = [];
+var walls = [];
 
 $("#chatForm").submit(event => {
 	event.preventDefault();
@@ -99,6 +100,8 @@ console.log($('#canvas').height());
 console.log(canvas.width +';' +canvas.height);
 socket.on('game update', function(data) {
 	players = data.players;
+	walls = data.walls;
+	update();
 });
 
 function update(){
@@ -112,7 +115,11 @@ function update(){
 		//console.log(players[i].x +':'+ players[i].y);
 		context.fillRect(players[i].x, players[i].y, playerSize, playerSize);
 	}
-	setTimeout(update, 30);
+	context.fillStyle = "yellow";
+	for (var i = 0; i < walls.length; i++) {
+		context.fillRect(walls[i].x1, walls[i].y1, walls[i].x2-walls[i].x1, walls[i].y2-walls[i].y1);
+	}
+	//setTimeout(update, 30);
 }
 
 document.addEventListener('keydown', (event) => {
@@ -164,5 +171,3 @@ document.addEventListener('keyup', (event) => {
 			break;
 	}
 });
-
-update();

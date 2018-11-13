@@ -9,11 +9,17 @@ var conn, channel, ch, cycleNumber = 0;
 const mapXSize = 1200;
 const mapYSize = 900;
 const playerSize = 30;
-const speed = 5;
+const speed = 15;
 var players = [];
+var walls = [];
+
+walls.push({x1: -50, y1: -50, x2: 5, y2: 950});
+walls.push({x1: 1195, y1: -50, x2: 1250, y2: 950});
+walls.push({x1: -50, y1: -50, x2: 1250, y2: 5});
+walls.push({x1: -50, y1: 895, x2: 1250, y2: 950});
 
 class Player {
-	constructor({score = 0, x = 10, y = 10, id, username}){
+	constructor({score = 0, x = 100, y = 100, id, username}){
 		this.id = id;
 		this.username = username;
 		this.score = score;
@@ -22,6 +28,12 @@ class Player {
 		this.movement = '';
 		this.isRunning = false;
 	}
+	/* get x2(){
+		return x + playerSize;
+	}
+	get y2(){
+		return y + playerSize;
+	} */
 }
 
 async function main() {
@@ -85,6 +97,31 @@ async function processMessage(msg) {
 	}
 }
 
+function movePlayer(i, speed){
+	var newX = players[i].x, newY = players[i].y;
+	switch (players[i].movement) {
+		case 'left':
+			newX -= speed;
+			break;
+		case 'up':
+			newY -= speed;
+			break;
+		case 'right':
+			newX += speed;
+			break;
+		case 'down':
+			newY += speed;
+			break;
+	}
+	if (!isOverlappingWithAWall(newX, newY, newX + playerSize, newY + playerSize)){
+		players[i].x = newX;
+		players[i].y = newY;
+		return true;
+	} else {
+		return false;
+	}
+}
+
 function gameCycle() {
 	try {
 		//ch = await channel;
@@ -92,31 +129,44 @@ function gameCycle() {
 		// if (cycleNumber % 100 === 0) {
 			// console.log(players);
 			// console.log('cycle number: ' + cycleNumber);
-		// }			
+		// }
 		for (var i = 0; i < players.length; i++){
 			if (players[i].isRunning) {
-				switch (players[i].movement) {
-					case 'left':
-						players[i].x -= speed;
-						break;
-					case 'up':
-						players[i].y -= speed;
-						break;
-					case 'right':
-						players[i].x += speed;
-						break;
-					case 'down':
-						players[i].y += speed;
-						break;
+				var newSpeed = speed;
+				while((!movePlayer(i, newSpeed)) && (newSpeed >= 1)){
+					newSpeed = Math.floor(newSpeed/2);
 				}
+				//console.log('Stop Right There, Criminal Scum!'
+				//console.log(isOverlappingWithAWall(players[0].x, 10, 11, 11));
 			}
 		}
 		channel.assertQueue('mainServer', {durable: false});
-		channel.sendToQueue('mainServer', Buffer.from(JSON.stringify({players: players, room: roomName, command: 'game update'})));
+		channel.sendToQueue('mainServer', Buffer.from(JSON.stringify({players: players, walls: walls, room: roomName, command: 'game update'})));
 		setTimeout(gameCycle, 30);
 	} catch (err) {
 		console.log(err);
 	}
+}
+
+function isOverlappingWithAWall(x1, y1, x2, y2){
+	var result = false;
+	for (var i = 0; i < walls.length; i++){
+		if (isOverlapped(x1, y1, x2, y2, walls[i].x1, walls[i].y1, walls[i].x2, walls[i].y2)) {
+			result = true;
+			break;
+		}
+	}
+	return result;
+}
+
+function isPlayersOverlapped(firstX, firstY, secondX, secondY){
+	return isOverlapped(firstX, firstX + playerSize, firstY, firstY + playerSize, secondX, secondX + playerSize, secondY, secondY + playerSize);
+}
+
+function isOverlapped(firstX1, firstY1, firstX2, firstY2, secondX1, secondY1, secondX2, secondY2){
+	/* return (firstX1 < secondX2 || firstX2 < secondX1 &&
+    firstY1 < secondY2 && firstY2 > secondY1) */
+	return ((firstX2 >= secondX1) && (firstY1 <= secondY2) && (firstY2 >= secondY1) && (firstX1 <= secondX2));
 }
 
 main();

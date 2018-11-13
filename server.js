@@ -208,7 +208,7 @@ async function processMessage(msg) {
 				for (var i = 0; i < data.players.length; i++) {
 					safeData.push({username: data.players[i].username, x: data.players[i].x, y: data.players[i].y, score: data.players[i].score})
 				}
-				io.to(data.room).emit('game update', {players: safeData});
+				io.to(data.room).emit('game update', {players: safeData, walls: data.walls});
 				break;
 		}
 	} catch(err) {
