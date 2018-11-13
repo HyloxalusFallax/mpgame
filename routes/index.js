@@ -58,6 +58,10 @@ router.post('/room', async (req, res) => {
 						detached: true,
 						shell: true
 					});
+					child_process.spawn(process.argv[0], ['game.js', newRoomName], {
+						detached: true,
+						shell: true
+					});
 					const ch = await router.use.channel;
 					ch.assertQueue('chat/' + newRoomName, {durable: false});
 					const message = new router.use.Message({body: 'Room ' + newRoomName + ' has been created', room: newRoomName});
@@ -124,12 +128,15 @@ router.delete('/room/:roomName', async(req, res) => {
 			res.status(400).json({error: 'Wrong room name!'});
 		else {
 			const message = new router.use.Message({body: 'Room ' + roomName + ' has been closed', room: roomName});
-			const queue = 'chat/' + router.use.rooms[roomIndex].name;
+			const chatQueue = 'chat/' + router.use.rooms[roomIndex].name;
+			const gameQueue = 'game/' + router.use.rooms[roomIndex].name;
 			const ch = await router.use.channel;
-			ch.assertQueue(queue, {durable: false});
-			ch.sendToQueue(queue, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
-			ch.assertQueue(queue, {durable: false});
-			ch.sendToQueue(queue, Buffer.from(JSON.stringify({command: 'stop'})));
+			ch.assertQueue(chatQueue, {durable: false});
+			ch.sendToQueue(chatQueue, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
+			ch.assertQueue(chatQueue, {durable: false});
+			ch.sendToQueue(chatQueue, Buffer.from(JSON.stringify({command: 'stop'})));
+			ch.assertQueue(gameQueue, {durable: false});
+			ch.sendToQueue(gameQueue, Buffer.from(JSON.stringify({command: 'stop'})));
 			router.use.rooms.splice(i, 1);
 			res.sendStatus(200);
 		}

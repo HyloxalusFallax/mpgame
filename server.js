@@ -91,6 +91,8 @@ io.on('connection', (socket) => {
 						ch.assertQueue('chat/' + msg.roomName, {durable: false});
 						ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
 						console.log('Player ' + msg.username + ' connected to the room ' + msg.roomName);
+						ch.assertQueue('game/' + msg.roomName, {durable: false});
+						ch.sendToQueue('game/' + msg.roomName, Buffer.from(JSON.stringify({id: socket.id, username: msg.username, command: 'spawn player'})));
 						socket.join(msg.roomName);
 						socket.on('disconnect', () => {
 							if (router.use.rooms[roomIndex] != null) {
@@ -100,6 +102,8 @@ io.on('connection', (socket) => {
 										const message = new router.use.Message({body: 'Player ' + msg.username + ' disconnected from the room', room: msg.roomName});
 										ch.assertQueue('chat/' + msg.roomName, {durable: false});
 										ch.sendToQueue('chat/' + msg.roomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
+										ch.assertQueue('game/' + msg.roomName, {durable: false});
+										ch.sendToQueue('game/' + msg.roomName, Buffer.from(JSON.stringify({id: socket.id, command: 'despawn player'})));
 										router.use.rooms[roomIndex].players.splice(i, 1);
 										break;
 									}
@@ -136,6 +140,36 @@ io.on('connection', (socket) => {
 								}
 							}
 						});
+						socket.on('controls update', async (msg) => {
+							//console.log('controls update');
+							var roomIndex = -1;
+							for(var i = 0; i < router.use.rooms.length; i++) {
+
+								if (router.use.rooms[i].name === msg.room) {
+									roomIndex = i;
+									break;
+								}
+							}
+							if (roomIndex === -1) {
+								io.to(socket.id).emit('controls update', 'Wrong room name!');
+							} else {
+								var playerIndex = -1;
+								for (var i = 0; i < router.use.rooms[roomIndex].players.length; i++) {
+									if (socket.id === router.use.rooms[roomIndex].players[i].id) {
+										playerIndex = i;
+										break;
+									}
+								}
+								if (playerIndex === -1) {
+									console.log('Wrong player name!');
+									io.to(socket.id).emit('post message', 'Wrong player name!');
+								} else {
+									const ch = await router.use.channel;
+									ch.assertQueue('game/' + msg.room, {durable: false});
+									ch.sendToQueue('game/' + msg.room, Buffer.from(JSON.stringify({movement: msg.movement, id: socket.id, command: 'controls update'})));
+								}
+							}
+						});
 						io.to(socket.id).emit('registration', 'ok');
 					}
 				}
@@ -167,6 +201,14 @@ async function processMessage(msg) {
 			case 'fetched chat':
 				console.log('fetched chat');
 				io.to(data.client).emit('fetched chat', data.result);
+				break;
+			case 'game update':
+				//console.log('game updated');
+				var safeData = [];
+				for (var i = 0; i < data.players.length; i++) {
+					safeData.push({username: data.players[i].username, x: data.players[i].x, y: data.players[i].y, score: data.players[i].score})
+				}
+				io.to(data.room).emit('game update', {players: safeData});
 				break;
 		}
 	} catch(err) {
