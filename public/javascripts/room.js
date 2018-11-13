@@ -88,11 +88,9 @@ function addMessage(msg){
 }
 
 var canvas = document.getElementById('canvas');
-//canvas.width = 100;
 var context = canvas.getContext('2d');
 canvas.width = 1200;
 canvas.height = 900;
-//$('#canvas').width($('#canvas').height()*4/3);
 console.log($('#canvas').width());
 console.log($('#canvas').height());
 console.log(canvas.width +';' +canvas.height);
@@ -103,63 +101,49 @@ socket.on('game update', function(data) {
 });
 
 function update(){
-	//context.canvas.width = window.innerWidth;
-	//console.log(innerWidth);
-    //context.canvas.height = window.innerWidth;
 	context.fillStyle = "#101010";
 	context.fillRect(0,0,canvas.width,canvas.height);
 	context.fillStyle = "#909090";
 	for (var i = 0; i < players.length; i++) {
-		//console.log(players[i].x +':'+ players[i].y);
 		context.fillRect(players[i].x1, players[i].y1, players[i].x2-players[i].x1, players[i].y2-players[i].y1);
 	}
 	context.fillStyle = "yellow";
 	for (var i = 0; i < walls.length; i++) {
 		context.fillRect(walls[i].x1, walls[i].y1, walls[i].x2-walls[i].x1, walls[i].y2-walls[i].y1);
 	}
-	//setTimeout(update, 30);
 }
 
-document.addEventListener('keydown', (event) => {
-	//event.preventDefault();
-	/* var movement = {
-		left: false,
-		up: false,
-		right: false,
-		down: false
-	} */
-	console.log('keydown');
+$('#messageInput').focus(() =>{
+	socket.emit('controls update', {movement: '', room: roomName});
+});
+
+$(document).focusout(() => {
+	socket.emit('controls update', {movement: '', room: roomName});
+});
+
+$(document).keydown((event) => {
+	if($(':focus').length)
+		return;
 	var movement = '';
 	switch (event.keyCode) {
 		case 65: // A
-			movement = 'left';
-			//movement.left = true;
+			movement = 'left';dd
 			break;
 		case 87: // W
 			movement = 'up';
-			//movement.up = true;
 			break;
 		case 68: // D
 			movement = 'right';
-			//movement.right = true;
 			break;
 		case 83: // S
 			movement = 'down';
-			//movement.down = true;
 			break;
 	}
 	socket.emit('controls update', {movement: movement, room: roomName});
 });
 
-document.addEventListener('keyup', (event) => {
-	//event.preventDefault();
-	/* var movement = {
-		left: false,
-		up: false,
-		right: false,
-		down: false
-	} */
-	console.log('keyup');
+$(document).keyup((event) => {
+	
 	switch (event.keyCode) {
 		case 65: // A
 		case 87: // W
