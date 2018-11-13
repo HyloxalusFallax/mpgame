@@ -68,7 +68,7 @@ io.on('connection', (socket) => {
 			if (roomIndex === -1) {
 				io.to(socket.id).emit('registration', 'Wrong room name!');
 			} else {
-				if (router.use.rooms[roomIndex].players.length > router.use.players_limit) {
+				if (router.use.rooms[roomIndex].players.length >= router.use.players_limit) {
 					io.to(socket.id).emit('registration', 'Too much players in this room!');
 				} else {
 					var isUsernameUnique = true;
@@ -203,12 +203,7 @@ async function processMessage(msg) {
 				io.to(data.client).emit('fetched chat', data.result);
 				break;
 			case 'game update':
-				//console.log('game updated');
-				var safeData = [];
-				for (var i = 0; i < data.players.length; i++) {
-					safeData.push({username: data.players[i].username, x: data.players[i].x, y: data.players[i].y, score: data.players[i].score})
-				}
-				io.to(data.room).emit('game update', {players: safeData, walls: data.walls});
+				io.to(data.room).emit('game update', {players: data.players, walls: data.walls});
 				break;
 		}
 	} catch(err) {

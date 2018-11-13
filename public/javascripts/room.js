@@ -87,8 +87,6 @@ function addMessage(msg){
 	$('#chatbox').append(message);
 }
 
-const playerSize = 30;
-
 var canvas = document.getElementById('canvas');
 //canvas.width = 100;
 var context = canvas.getContext('2d');
@@ -113,7 +111,7 @@ function update(){
 	context.fillStyle = "#909090";
 	for (var i = 0; i < players.length; i++) {
 		//console.log(players[i].x +':'+ players[i].y);
-		context.fillRect(players[i].x, players[i].y, playerSize, playerSize);
+		context.fillRect(players[i].x1, players[i].y1, players[i].x2-players[i].x1, players[i].y2-players[i].y1);
 	}
 	context.fillStyle = "yellow";
 	for (var i = 0; i < walls.length; i++) {
