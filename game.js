@@ -113,7 +113,7 @@ function movePlayer(i, speed){
 			newY += speed;
 			break;
 	}
-	if (!isOverlappingWithAWall(newX, newY, newX + playerSize, newY + playerSize)){
+	if (!isOverlappingWithAWall(newX, newY, newX + playerSize, newY + playerSize) && !isOvelappingWithOtherPlayers(newX, newY, i)){
 		players[i].x = newX;
 		players[i].y = newY;
 		return true;
@@ -124,12 +124,6 @@ function movePlayer(i, speed){
 
 function gameCycle() {
 	try {
-		//ch = await channel;
-		//cycleNumber++;
-		// if (cycleNumber % 100 === 0) {
-			// console.log(players);
-			// console.log('cycle number: ' + cycleNumber);
-		// }
 		for (var i = 0; i < players.length; i++){
 			if (players[i].isRunning) {
 				var newSpeed = speed;
@@ -137,7 +131,6 @@ function gameCycle() {
 					newSpeed = Math.floor(newSpeed/2);
 				}
 				//console.log('Stop Right There, Criminal Scum!'
-				//console.log(isOverlappingWithAWall(players[0].x, 10, 11, 11));
 			}
 		}
 		channel.assertQueue('mainServer', {durable: false});
@@ -149,23 +142,28 @@ function gameCycle() {
 }
 
 function isOverlappingWithAWall(x1, y1, x2, y2){
-	var result = false;
 	for (var i = 0; i < walls.length; i++){
-		if (isOverlapped(x1, y1, x2, y2, walls[i].x1, walls[i].y1, walls[i].x2, walls[i].y2)) {
-			result = true;
-			break;
-		}
+		if (isOverlapped(x1, y1, x2, y2, walls[i].x1, walls[i].y1, walls[i].x2, walls[i].y2))
+			return true;
 	}
-	return result;
+	return false;
+}
+
+function isOvelappingWithOtherPlayers(x, y, index){
+	for(var i = 0; i < players.length; i++){
+		if (i === index)
+			continue;
+		if (isPlayersOverlapped(x, y, players[i].x, players[i].y))
+			return true;
+	}
+	return false;
 }
 
 function isPlayersOverlapped(firstX, firstY, secondX, secondY){
-	return isOverlapped(firstX, firstX + playerSize, firstY, firstY + playerSize, secondX, secondX + playerSize, secondY, secondY + playerSize);
+	return isOverlapped(firstX, firstY, firstX + playerSize, firstY + playerSize, secondX, secondY, secondX + playerSize, secondY + playerSize);
 }
 
 function isOverlapped(firstX1, firstY1, firstX2, firstY2, secondX1, secondY1, secondX2, secondY2){
-	/* return (firstX1 < secondX2 || firstX2 < secondX1 &&
-    firstY1 < secondY2 && firstY2 > secondY1) */
 	return ((firstX2 >= secondX1) && (firstY1 <= secondY2) && (firstY2 >= secondY1) && (firstX1 <= secondX2));
 }
 
