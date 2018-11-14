@@ -10,9 +10,13 @@ const mapXSize = 1200;
 const mapYSize = 900;
 const playerLength = 60;
 const playerWidth = 30;
+const bulletSize = 10;
 const speed = 15;
+const bulletSpeed = 30;
+const blastRadius = 50;
 var players = [];
 var walls = [];
+var bullets = [];
 
 walls.push({x1: -50, y1: -50, x2: 5, y2: 950});
 walls.push({x1: 1195, y1: -50, x2: 1250, y2: 950});
@@ -31,6 +35,8 @@ class Player {
 		this.direction = 'up';
 		this.isRunning = false;
 		this.newDirection = '';
+		this.firing = false;
+		this.reload = 0;
 	}
 }
 
@@ -66,26 +72,34 @@ async function processMessage(msg) {
 				break;
 			case 'despawn player':
 				console.log('despawn player');
-				for (var i = 0; i < players.length; i++)
+				/* for (var i = 0; i < players.length; i++)
 					if (data.id === players[i].id){
 						players.splice(i, 1);
 						break;
-					}
+					} */
+				players = players.filter(player => player.id != data.id);
+				bullets = bullets.filter(bullet => bullet.player != data.id);
 				break;
 			case 'controls update':
 				for (var i = 0; i < players.length; i++)
 					if (data.id === players[i].id) {
-						switch (data.movement) {
+						switch (data.controls) {
+							case 'fire':
+								if (players[i].reload === 0){
+									players[i].firing = true;
+								}
+								break;
 							case 'left':
 							case 'up':
 							case 'right':
 							case 'down':
-								if (players[i].direction != data.movement)
-									players[i].newDirection = data.movement;
+								if (players[i].direction != data.controls)
+									players[i].newDirection = data.controls;
 								else {
-									players[i].direction = data.movement;
+									players[i].direction = data.controls;
 									players[i].isRunning = true;
 								}
+								//console.log(data.controls)
 								break;
 							case '':
 								players[i].isRunning = false;
@@ -171,9 +185,77 @@ function turnPlayer(i) {
 	players[i].newDirection = '';
 }
 
+function fire(i){
+	players[i].firing = false;
+	players[i].reload = 100;
+	switch(players[i].direction){
+		case 'up':
+			bullets.push({player: players[i].id, x: players[i].x1 + playerWidth/2 - bulletSize/2, y: players[i].y1 + playerLength/2 - bulletSize/2, direction: players[i].direction});
+			break;
+		case 'right':
+			bullets.push({player: players[i].id, x: players[i].x1 + playerLength/2 - bulletSize/2, y: players[i].y1 + playerWidth/2 - bulletSize/2, direction: players[i].direction});
+			break;
+		case 'down':
+			bullets.push({player: players[i].id, x: players[i].x1 + playerWidth/2 - bulletSize/2, y: players[i].y1 + playerLength/2 - bulletSize/2, direction: players[i].direction});
+			break;
+		case 'left':
+			bullets.push({player: players[i].id, x: players[i].x1 + playerLength/2 - bulletSize/2, y: players[i].y1 + playerWidth/2 - bulletSize/2, direction: players[i].direction});
+			break;
+	}
+}
+
+function moveBullet(i, speed){
+	var newX = bullets[i].x, newY = bullets[i].y;
+	switch(bullets[i].direction){
+		case 'up':
+			newY = newY - speed;
+			break;
+		case 'right':
+			newX = newX + speed;
+			break;
+		case 'down':
+			newY = newY + speed;
+			break;
+		case 'left':
+			newX = newX - speed;
+			break;
+	}
+	var playerIndex = -1;
+	for (var j = 0; j < players.length; j++)
+		if (players[j].id === bullets[i].player)
+			playerIndex = j;
+	if (!isOverlappingWithAWall(newX, newY, newX + bulletSize, newY + bulletSize) && !isOvelappingWithOtherPlayers(newX, newY, newX + bulletSize, newY + bulletSize, playerIndex)){
+		bullets[i].x = newX;
+		bullets[i].y = newY;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function distance (x, y, sx, sy){
+	return Math.sqrt(Math.pow((x - sx), 2) + Math.pow((y - sy), 2));
+}
+
+function detonateBullet(i){
+	for (var j = 0; j < players.length; j++){
+		const playerCenterX = players[j].x1 + (players[j].x2 - players[j].x1) / 2;
+		const playerCenterY = players[j].y1 + (players[j].y2 - players[j].y1) / 2;
+		if (distance(bullets[i].x, bullets[i].y, playerCenterX, playerCenterY) <= blastRadius){
+			console.log('Hasta la vista, baby');
+		}
+	}
+	bullets.splice(i, 1);
+}
+
 function gameCycle() {
 	try {
 		for (var i = 0; i < players.length; i++){
+			if (players[i].reload != 0)
+				players[i].reload -= 1;
+			else
+				if (players[i].firing === true)
+					fire(i);
 			if (players[i].newDirection != ''){
 				turnPlayer(i);
 			} else {
@@ -186,12 +268,26 @@ function gameCycle() {
 				}
 			}
 		}
+		for (var i = 0; i < bullets.length; i++){
+			var newSpeed = bulletSpeed;
+			while((!moveBullet(i, newSpeed))){
+				if (newSpeed === 1){
+					detonateBullet(i);
+					break;
+				}
+				newSpeed = newSpeed - 1;
+			}
+		}
 		var safePlayers = [];
 		for (var i = 0; i < players.length; i++) {
 			safePlayers.push({username: players[i].username, direction: players[i].direction, x1: players[i].x1, y1: players[i].y1, x2: players[i].x2, y2: players[i].y2, score: players[i].score})
 		}
+		var safeBullets = [];
+		for (var i = 0; i < bullets.length; i++) {
+			safeBullets.push({x: bullets[i].x, y: bullets[i].y})
+		} 
 		channel.assertQueue('mainServer', {durable: false});
-		channel.sendToQueue('mainServer', Buffer.from(JSON.stringify({players: safePlayers, walls: walls, room: roomName, command: 'game update'})));
+		channel.sendToQueue('mainServer', Buffer.from(JSON.stringify({players: safePlayers, bullets: safeBullets, walls: walls, room: roomName, command: 'game update'})));
 		setTimeout(gameCycle, 30);
 	} catch (err) {
 		console.log(err);

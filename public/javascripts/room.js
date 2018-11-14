@@ -6,6 +6,7 @@ var username = '';
 var allMessages = [];
 var players = [];
 var walls = [];
+var bullets = [];
 
 $("#chatForm").submit(event => {
 	event.preventDefault();
@@ -63,10 +64,6 @@ socket.on('post message', (msg) => {
 	fillChat();
 });
 
-socket.on('game rules', (msg) => {
-	
-});
-
 function fillChat() {
 	$('#chatbox').empty();
 	allMessages.sort((a, b) => {
@@ -74,6 +71,7 @@ function fillChat() {
 	});
 	for (var i = 0; i < allMessages.length; i++)
 		addMessage(allMessages[i]);
+	$('#chatbox').scrollTop($('#chatbox').height()*$('#chatbox').height());
 }
 
 function addMessage(msg){
@@ -93,6 +91,9 @@ function addMessage(msg){
 
 const playerLength = 60;
 const playerWidth = 30;
+const cannonLength = playerLength * 1/3;
+const cannonWidth = playerWidth * 1/4;
+const bulletSize = 10;
 
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
@@ -104,6 +105,7 @@ console.log(canvas.width + ';' + canvas.height);
 socket.on('game update', function(data) {
 	players = data.players;
 	walls = data.walls;
+	bullets = data.bullets;
 	update();
 });
 
@@ -112,8 +114,6 @@ function update(){
 	context.fillRect(0,0,canvas.width,canvas.height);
 	context.fillStyle = "#223709";
 	for (var i = 0; i < players.length; i++) {
-		const cannonLength = playerLength * 1/3;
-		const cannonWidth = playerWidth * 1/4;
 		switch (players[i].direction){
 			case 'up':
 				context.fillRect(players[i].x1, players[i].y1 + cannonLength, playerWidth, playerLength - cannonLength);
@@ -133,6 +133,12 @@ function update(){
 				break;
 		}
 	}
+	context.fillStyle = "#660000";
+	for (var i = 0; i < bullets.length; i++) {
+		context.beginPath();
+		context.arc(bullets[i].x+bulletSize/2, bullets[i].y+bulletSize/2, bulletSize/2, 0, 2 * Math.PI, false);
+		context.fill();
+	}
 	context.fillStyle = "#745907";
 	for (var i = 0; i < walls.length; i++) {
 		context.fillRect(walls[i].x1, walls[i].y1, walls[i].x2-walls[i].x1, walls[i].y2-walls[i].y1);
@@ -140,34 +146,37 @@ function update(){
 }
 
 $('#messageInput').focus(() =>{
-	socket.emit('controls update', {movement: '', room: roomName});
+	socket.emit('controls update', {controls: '', room: roomName});
 });
 
 $(document).focusout(() => {
-	socket.emit('controls update', {movement: '', room: roomName});
+	socket.emit('controls update', {controls: '', room: roomName});
 });
 
-var movement = '';
+var controls = '';
 
 $(document).keydown((event) => {
 	if($(':focus').length)
 		return;
 	switch (event.keyCode) {
 		case 65: // A
-			movement = 'left';
-			socket.emit('controls update', {movement: movement, room: roomName});
+			controls = 'left';
+			socket.emit('controls update', {controls: controls, room: roomName});
 			break;
 		case 87: // W
-			movement = 'up';
-			socket.emit('controls update', {movement: movement, room: roomName});
+			controls = 'up';
+			socket.emit('controls update', {controls: controls, room: roomName});
 			break;
 		case 68: // D
-			movement = 'right';
-			socket.emit('controls update', {movement: movement, room: roomName});
+			controls = 'right';
+			socket.emit('controls update', {controls: controls, room: roomName});
 			break;
 		case 83: // S
-			movement = 'down';
-			socket.emit('controls update', {movement: movement, room: roomName});
+			controls = 'down';
+			socket.emit('controls update', {controls: controls, room: roomName});
+			break;
+		case 32: // SPACE
+			socket.emit('controls update', {controls: 'fire', room: roomName});
 			break;
 	}
 });
@@ -175,27 +184,27 @@ $(document).keydown((event) => {
 $(document).keyup((event) => {
 	switch (event.keyCode) {
 		case 65: // A
-			if (movement === 'left'){
-				movement = '';
-				socket.emit('controls update', {movement: '', room: roomName});
+			if (controls === 'left'){
+				controls = '';
+				socket.emit('controls update', {controls: '', room: roomName});
 			}
 			break;
 		case 87: // W
-			if (movement === 'up'){
-				movement = '';
-				socket.emit('controls update', {movement: '', room: roomName});
+			if (controls === 'up'){
+				controls = '';
+				socket.emit('controls update', {controls: '', room: roomName});
 			}
 			break;
 		case 68: // D
-			if (movement === 'right'){
-				movement = '';
-				socket.emit('controls update', {movement: '', room: roomName});
+			if (controls === 'right'){
+				controls = '';
+				socket.emit('controls update', {controls: '', room: roomName});
 			}
 			break;
 		case 83: // S
-			if (movement === 'down'){
-				movement = '';
-				socket.emit('controls update', {movement: '', room: roomName});
+			if (controls === 'down'){
+				controls = '';
+				socket.emit('controls update', {controls: '', room: roomName});
 			}
 			break;
 	}

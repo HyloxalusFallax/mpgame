@@ -166,7 +166,7 @@ io.on('connection', (socket) => {
 								} else {
 									const ch = await router.use.channel;
 									ch.assertQueue('game/' + msg.room, {durable: false});
-									ch.sendToQueue('game/' + msg.room, Buffer.from(JSON.stringify({movement: msg.movement, id: socket.id, command: 'controls update'})));
+									ch.sendToQueue('game/' + msg.room, Buffer.from(JSON.stringify({controls: msg.controls, id: socket.id, command: 'controls update'})));
 								}
 							}
 						});
@@ -203,7 +203,7 @@ async function processMessage(msg) {
 				io.to(data.client).emit('fetched chat', data.result);
 				break;
 			case 'game update':
-				io.to(data.room).emit('game update', {players: data.players, walls: data.walls});
+				io.to(data.room).emit('game update', {players: data.players, walls: data.walls, bullets: data.bullets});
 				break;
 		}
 	} catch(err) {
