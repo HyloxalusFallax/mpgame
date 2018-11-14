@@ -52,6 +52,28 @@ async function main() {
 	}
 };
 
+function respawnPlayer(index){
+	console.log('respawn player');
+	var x1, y1, x2, y2;
+	while (true) {
+		x1 = getRndInteger(0, mapXSize);
+		y1 = getRndInteger(0, mapYSize);
+		x2 = x1 + playerWidth;
+		y2 = y1 + playerLength;
+		if (!isOverlappingWithAWall(x1, y1, x2, y2) && !isOvelappingWithOtherPlayers(x1, y1, x2, y2, -1))
+			break;
+	}
+	players[index].x1 = x1;
+	players[index].y1 = y1;
+	players[index].x2 = x2;
+	players[index].y2 = y2;
+	players[index].direction = 'up';
+	players[index].newDirection = '';
+	players[index].firing = false;
+	players[index].reload = 0;
+	players[index].isRunning = false;
+}
+
 async function processMessage(msg) {
 	try {
 		ch = await channel;
@@ -72,11 +94,6 @@ async function processMessage(msg) {
 				break;
 			case 'despawn player':
 				console.log('despawn player');
-				/* for (var i = 0; i < players.length; i++)
-					if (data.id === players[i].id){
-						players.splice(i, 1);
-						break;
-					} */
 				players = players.filter(player => player.id != data.id);
 				bullets = bullets.filter(bullet => bullet.player != data.id);
 				break;
@@ -99,7 +116,6 @@ async function processMessage(msg) {
 									players[i].direction = data.controls;
 									players[i].isRunning = true;
 								}
-								//console.log(data.controls)
 								break;
 							case '':
 								players[i].isRunning = false;
@@ -238,11 +254,22 @@ function distance (x, y, sx, sy){
 }
 
 function detonateBullet(i){
+	var playerIndex = -1;
+	for (var j = 0; j < players.length; j++)
+		if (players[j].id === bullets[i].player)
+			playerIndex = j;
 	for (var j = 0; j < players.length; j++){
 		const playerCenterX = players[j].x1 + (players[j].x2 - players[j].x1) / 2;
 		const playerCenterY = players[j].y1 + (players[j].y2 - players[j].y1) / 2;
 		if (distance(bullets[i].x, bullets[i].y, playerCenterX, playerCenterY) <= blastRadius){
-			console.log('Hasta la vista, baby');
+			if(players[playerIndex].id != players[j].id)
+				players[playerIndex].score += 100;
+			players[j].score -= 100;
+			respawnPlayer(j);
+			channel.assertQueue('chat/' + roomName, {durable: false});
+			const message = {room: roomName, body: 'Player ' + players[playerIndex].username + ' killed player ' + players[j].username, date: new Date()}
+			channel.sendToQueue('chat/' + roomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
+			//console.log('Hasta la vista, baby');
 		}
 	}
 	bullets.splice(i, 1);

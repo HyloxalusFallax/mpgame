@@ -160,8 +160,31 @@ input{
 	position: relative;
 }
 
-#stats{
+#info{
 	flex: 6%;
 	min-width: 6%;
 	border: 3px solid grey;
+	display: flex;
+	flex-flow: column;
+}
+#stats{
+	flex: 50%;
+	min-height: 50%;
+}
+#leaderboard{
+	flex: 50%;
+	min-height: 50%;
+	border: 1px solid grey;
+	overflow-y: auto;
+}
+
+.entry{
+	display: flex;
+	flex-flow: rows;
+	flex-wrap: wrap;
+}
+.score{
+	flex: 50%;
+	text-align: right;
+	margin: 0px 10px 0px 0px;
 }

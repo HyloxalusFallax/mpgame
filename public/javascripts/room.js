@@ -109,7 +109,25 @@ socket.on('game update', function(data) {
 	update();
 });
 
+function fillLeaderboard(){
+	players.sort((a, b) => {
+		return a.score < b.score;
+	});
+	$('#leaderboard').empty();
+	for (var i = 0; i < players.length; i++)
+		addLeaderboardEntry(players[i]);
+}
+
+function addLeaderboardEntry(player){
+	const entry = $('<div></div>').attr('class', 'entry');
+	const score = $('<div></div>').attr('class', 'score').text(player.score);
+	const username = $('<div></div>').attr('class', 'author').text(player.username);
+	entry.append(username, $('<div></div>').text(':').attr('class', 'divider'), score);
+	$('#leaderboard').append(entry);
+}
+
 function update(){
+	fillLeaderboard();
 	context.fillStyle = "#101010";
 	context.fillRect(0,0,canvas.width,canvas.height);
 	context.fillStyle = "#223709";
