@@ -11,9 +11,10 @@ const mapYSize = 900;
 const playerLength = 60;
 const playerWidth = 30;
 const bulletSize = 10;
-const speed = 15;
+const speed = 10;
 const bulletSpeed = 30;
 const blastRadius = 50;
+const reloadingTime = 50;
 var players = [];
 var walls = [];
 var bullets = [];
@@ -203,7 +204,7 @@ function turnPlayer(i) {
 
 function fire(i){
 	players[i].firing = false;
-	players[i].reload = 100;
+	players[i].reload = reloadingTime;
 	switch(players[i].direction){
 		case 'up':
 			bullets.push({player: players[i].id, x: players[i].x1 + playerWidth/2 - bulletSize/2, y: players[i].y1 + playerLength/2 - bulletSize/2, direction: players[i].direction});
@@ -307,7 +308,7 @@ function gameCycle() {
 		}
 		var safePlayers = [];
 		for (var i = 0; i < players.length; i++) {
-			safePlayers.push({username: players[i].username, direction: players[i].direction, x1: players[i].x1, y1: players[i].y1, x2: players[i].x2, y2: players[i].y2, score: players[i].score})
+			safePlayers.push({username: players[i].username, direction: players[i].direction, x1: players[i].x1, y1: players[i].y1, x2: players[i].x2, y2: players[i].y2, score: players[i].score, reload: players[i].reload})
 		}
 		var safeBullets = [];
 		for (var i = 0; i < bullets.length; i++) {

@@ -126,12 +126,45 @@ function addLeaderboardEntry(player){
 	$('#leaderboard').append(entry);
 }
 
+function fillStats(){
+	var playerIndex = -1;
+	for (var i = 0; i < players.length; i++)
+		if (username === players[i].username)
+			playerIndex = i;
+	$('#stats').empty();
+	const stat = $('<div></div>').attr('class', 'entry');
+	const cannon = $('<div></div>').text('cannon');
+	var reload = $('<div></div>');
+	if (players[playerIndex].reload != '0')
+		reload.attr('style', 'color: red').text('reloading (' + players[playerIndex].reload + ')');
+	else
+		reload.attr('style', 'color: green').text('ready');
+	stat.append(cannon, $('<div></div>').text(':').attr('class', 'divider'), reload);
+	$('#stats').append(stat);
+}
+
 function update(){
 	fillLeaderboard();
+	fillStats();
 	context.fillStyle = "#101010";
 	context.fillRect(0,0,canvas.width,canvas.height);
-	context.fillStyle = "#223709";
+	context.fillStyle = "#660000";
+	for (var i = 0; i < bullets.length; i++) {
+		context.beginPath();
+		context.arc(bullets[i].x+bulletSize/2, bullets[i].y+bulletSize/2, bulletSize/2, 0, 2 * Math.PI, false);
+		context.fill();
+	}
 	for (var i = 0; i < players.length; i++) {
+		context.fillStyle = "silver";
+		context.textAlign = "center";
+		context.font = "10px Arial";
+		if ((players[i].direction === 'up') || (players[i].direction === 'down'))
+			context.fillText(players[i].username, players[i].x1 + playerWidth/2 , players[i].y1 - 10);
+		else if (players[i].direction === 'right')
+			context.fillText(players[i].username, players[i].x1 + playerLength/2 - cannonLength/2, players[i].y1 - 10);
+		else if (players[i].direction === 'left')
+			context.fillText(players[i].username, players[i].x1 + playerLength/2 + cannonLength/2, players[i].y1 - 10);
+		context.fillStyle = "#223709";
 		switch (players[i].direction){
 			case 'up':
 				context.fillRect(players[i].x1, players[i].y1 + cannonLength, playerWidth, playerLength - cannonLength);
@@ -151,12 +184,7 @@ function update(){
 				break;
 		}
 	}
-	context.fillStyle = "#660000";
-	for (var i = 0; i < bullets.length; i++) {
-		context.beginPath();
-		context.arc(bullets[i].x+bulletSize/2, bullets[i].y+bulletSize/2, bulletSize/2, 0, 2 * Math.PI, false);
-		context.fill();
-	}
+
 	context.fillStyle = "#745907";
 	for (var i = 0; i < walls.length; i++) {
 		context.fillRect(walls[i].x1, walls[i].y1, walls[i].x2-walls[i].x1, walls[i].y2-walls[i].y1);
