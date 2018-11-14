@@ -28,15 +28,10 @@ class Player {
 		this.y1 = y;
 		this.x2 = x + playerWidth;
 		this.y2 = y + playerLength;
-		this.movement = 'up';
+		this.direction = 'up';
 		this.isRunning = false;
+		this.newDirection = '';
 	}
-	/* get x2(){
-		return x + playerSize;
-	}
-	get y2(){
-		return y + playerSize;
-	} */
 }
 
 async function main() {
@@ -85,11 +80,14 @@ async function processMessage(msg) {
 							case 'up':
 							case 'right':
 							case 'down':
-								players[i].movement = data.movement;
-								players[i].isRunning = true;
+								if (players[i].direction != data.movement)
+									players[i].newDirection = data.movement;
+								else {
+									players[i].direction = data.movement;
+									players[i].isRunning = true;
+								}
 								break;
 							case '':
-								//players[i].movement = data.movement;
 								players[i].isRunning = false;
 								break;
 						}
@@ -110,7 +108,7 @@ async function processMessage(msg) {
 
 function movePlayer(i, speed){
 	var newX1 = players[i].x1, newY1 = players[i].y1, newX2 = players[i].x2, newY2 = players[i].y2;
-	switch (players[i].movement) {
+	switch (players[i].direction) {
 		case 'left':
 			newX1 -= speed;
 			newX2 -= speed;
@@ -139,15 +137,53 @@ function movePlayer(i, speed){
 	}
 }
 
+function turnPlayer(i) {
+	var newX1 = 0, newX2 = 0, newY1 = 0, newY2 = 0;
+	if (players[i].direction === 'up' || players[i].direction === 'down')
+		if (players[i].newDirection === 'left' || players[i].newDirection === 'right'){
+			newX1 = players[i].x1 + playerWidth/2 - playerLength/2;
+			newX2 = newX1 + playerLength;
+			newY1 = players[i].y1 + playerLength/2 - playerWidth/2;
+			newY2 = newY1 + playerWidth;
+		}
+	if (players[i].direction === 'left' || players[i].direction === 'right')
+		if (players[i].newDirection === 'up' || players[i].newDirection === 'down'){
+			newX1 = players[i].x1 + playerLength/2 - playerWidth/2;
+			newX2 = newX1 + playerWidth;
+			newY1 = players[i].y1 + playerWidth/2 - playerLength/2;
+			newY2 = newY1 + playerLength;
+		}
+	if (((players[i].direction === 'left') && (players[i].newDirection === 'right'))
+		|| ((players[i].direction === 'right') && (players[i].newDirection === 'left'))
+		|| ((players[i].direction === 'up') && (players[i].newDirection === 'down'))
+		|| ((players[i].direction === 'down') && (players[i].newDirection === 'up'))) {
+		players[i].direction = players[i].newDirection;
+		players[i].isRunning = true;
+	}
+	if (!isOverlappingWithAWall(newX1, newY1, newX2, newY2) && !isOvelappingWithOtherPlayers(newX1, newY1, newX2, newY2, i)){
+		players[i].x1 = newX1;
+		players[i].y1 = newY1;
+		players[i].x2 = newX2;
+		players[i].y2 = newY2;
+		players[i].direction = players[i].newDirection;
+		players[i].isRunning = true;
+	}
+	players[i].newDirection = '';
+}
+
 function gameCycle() {
 	try {
 		for (var i = 0; i < players.length; i++){
-			if (players[i].isRunning) {
-				var newSpeed = speed;
-				while((!movePlayer(i, newSpeed)) && (newSpeed >= 1)){
-					newSpeed = Math.floor(newSpeed/2);
+			if (players[i].newDirection != ''){
+				turnPlayer(i);
+			} else {
+				if (players[i].isRunning){
+					var newSpeed = speed;
+					while((!movePlayer(i, newSpeed)) && (newSpeed >= 1)){
+						newSpeed = Math.floor(newSpeed/2);
+					}
+					//console.log('Stop Right There, Criminal Scum!'
 				}
-				//console.log('Stop Right There, Criminal Scum!'
 			}
 		}
 		var safePlayers = [];

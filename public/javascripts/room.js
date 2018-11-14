@@ -93,7 +93,7 @@ canvas.width = 1200;
 canvas.height = 900;
 console.log($('#canvas').width());
 console.log($('#canvas').height());
-console.log(canvas.width +';' +canvas.height);
+console.log(canvas.width + ';' + canvas.height);
 socket.on('game update', function(data) {
 	players = data.players;
 	walls = data.walls;
@@ -121,35 +121,57 @@ $(document).focusout(() => {
 	socket.emit('controls update', {movement: '', room: roomName});
 });
 
+var movement = '';
+
 $(document).keydown((event) => {
 	if($(':focus').length)
 		return;
-	var movement = '';
+	console.log(event.keyCode);
 	switch (event.keyCode) {
 		case 65: // A
-			movement = 'left';dd
+			movement = 'left';
+			socket.emit('controls update', {movement: movement, room: roomName});
 			break;
 		case 87: // W
 			movement = 'up';
+			socket.emit('controls update', {movement: movement, room: roomName});
 			break;
 		case 68: // D
 			movement = 'right';
+			socket.emit('controls update', {movement: movement, room: roomName});
 			break;
 		case 83: // S
 			movement = 'down';
+			socket.emit('controls update', {movement: movement, room: roomName});
 			break;
 	}
-	socket.emit('controls update', {movement: movement, room: roomName});
 });
 
 $(document).keyup((event) => {
-	
 	switch (event.keyCode) {
 		case 65: // A
+			if (movement === 'left'){
+				movement = '';
+				socket.emit('controls update', {movement: '', room: roomName});
+			}
+			break;
 		case 87: // W
+			if (movement === 'up'){
+				movement = '';
+				socket.emit('controls update', {movement: '', room: roomName});
+			}
+			break;
 		case 68: // D
+			if (movement === 'right'){
+				movement = '';
+				socket.emit('controls update', {movement: '', room: roomName});
+			}
+			break;
 		case 83: // S
-			socket.emit('controls update', {movement: '', room: roomName});
+			if (movement === 'down'){
+				movement = '';
+				socket.emit('controls update', {movement: '', room: roomName});
+			}
 			break;
 	}
 });
