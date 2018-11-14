@@ -63,6 +63,10 @@ socket.on('post message', (msg) => {
 	fillChat();
 });
 
+socket.on('game rules', (msg) => {
+	
+});
+
 function fillChat() {
 	$('#chatbox').empty();
 	allMessages.sort((a, b) => {
@@ -87,6 +91,9 @@ function addMessage(msg){
 	$('#chatbox').append(message);
 }
 
+const playerLength = 60;
+const playerWidth = 30;
+
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 canvas.width = 1200;
@@ -103,11 +110,30 @@ socket.on('game update', function(data) {
 function update(){
 	context.fillStyle = "#101010";
 	context.fillRect(0,0,canvas.width,canvas.height);
-	context.fillStyle = "#909090";
+	context.fillStyle = "#223709";
 	for (var i = 0; i < players.length; i++) {
-		context.fillRect(players[i].x1, players[i].y1, players[i].x2-players[i].x1, players[i].y2-players[i].y1);
+		const cannonLength = playerLength * 1/3;
+		const cannonWidth = playerWidth * 1/4;
+		switch (players[i].direction){
+			case 'up':
+				context.fillRect(players[i].x1, players[i].y1 + cannonLength, playerWidth, playerLength - cannonLength);
+				context.fillRect(players[i].x1 + playerWidth/2 - cannonWidth/2, players[i].y1, cannonWidth, cannonLength);
+				break;
+			case 'right':
+				context.fillRect(players[i].x1, players[i].y1, playerLength-cannonLength, playerWidth);
+				context.fillRect(players[i].x2 - cannonLength, players[i].y1 + playerWidth/2 - cannonWidth/2, cannonLength, cannonWidth);
+				break;
+			case 'down':
+				context.fillRect(players[i].x1, players[i].y1, playerWidth, playerLength - cannonLength);
+				context.fillRect(players[i].x1 + playerWidth/2 - cannonWidth/2, players[i].y2-cannonLength, cannonWidth, cannonLength);
+				break;
+			case 'left':
+				context.fillRect(players[i].x1 + cannonLength, players[i].y1, playerLength - cannonLength, playerWidth);
+				context.fillRect(players[i].x1, players[i].y1 + playerWidth/2 - cannonWidth/2, cannonLength, cannonWidth);
+				break;
+		}
 	}
-	context.fillStyle = "yellow";
+	context.fillStyle = "#745907";
 	for (var i = 0; i < walls.length; i++) {
 		context.fillRect(walls[i].x1, walls[i].y1, walls[i].x2-walls[i].x1, walls[i].y2-walls[i].y1);
 	}
@@ -126,7 +152,6 @@ var movement = '';
 $(document).keydown((event) => {
 	if($(':focus').length)
 		return;
-	console.log(event.keyCode);
 	switch (event.keyCode) {
 		case 65: // A
 			movement = 'left';

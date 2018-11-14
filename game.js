@@ -55,8 +55,8 @@ async function processMessage(msg) {
 				console.log('spawn player');
 				var x1, y1, x2, y2;
 				while (true) {
-					x1 = getRndInteger(0, 1200);
-					y1 = getRndInteger(0, 900);
+					x1 = getRndInteger(0, mapXSize);
+					y1 = getRndInteger(0, mapYSize);
 					x2 = x1 + playerWidth;
 					y2 = y1 + playerLength;
 					if (!isOverlappingWithAWall(x1, y1, x2, y2) && !isOvelappingWithOtherPlayers(x1, y1, x2, y2, -1))
@@ -188,7 +188,7 @@ function gameCycle() {
 		}
 		var safePlayers = [];
 		for (var i = 0; i < players.length; i++) {
-			safePlayers.push({username: players[i].username, x1: players[i].x1, y1: players[i].y1, x2: players[i].x2, y2: players[i].y2, score: players[i].score})
+			safePlayers.push({username: players[i].username, direction: players[i].direction, x1: players[i].x1, y1: players[i].y1, x2: players[i].x2, y2: players[i].y2, score: players[i].score})
 		}
 		channel.assertQueue('mainServer', {durable: false});
 		channel.sendToQueue('mainServer', Buffer.from(JSON.stringify({players: safePlayers, walls: walls, room: roomName, command: 'game update'})));
