@@ -1,15 +1,15 @@
 'use strict'
 
-var express = require('express'),
-	http = require('http'),
-	path = require('path'),
-	createError = require('http-errors'),
-	cookieParser = require('cookie-parser'),
-	socketIO = require('socket.io'),
-	logger = require('morgan'),
-	cookieParserIO = require('socket.io-cookie'),
-	amqp = require('amqplib'),
-	child_process = require('child_process');
+const express = require('express'),
+	  http = require('http'),
+	  path = require('path'),
+	  createError = require('http-errors'),
+	  cookieParser = require('cookie-parser'),
+	  socketIO = require('socket.io'),
+	  logger = require('morgan'),
+	  cookieParserIO = require('socket.io-cookie'),
+	  amqp = require('amqplib'),
+	  child_process = require('child_process');
 
 var router = require('./routes/index');
 

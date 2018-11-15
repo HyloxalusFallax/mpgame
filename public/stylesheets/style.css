@@ -29,10 +29,43 @@ input{
 }
 #roomsList{
 	font-size: 18px;
-	height: 200px;
+	height: 250px;
 	width: 300px;
 	overflow-y: auto;
 	overflow-x: hidden;
+}
+
+#addRoomForm{
+	display: flex;
+	flex-flow: column;
+	border: 2px solid #606060;
+}
+.formRow{
+	display: flex;
+	flex-flow: rows;
+	border: 1px solid #404040;
+}
+
+label{
+	flex: 30%;
+	min-width: 30%;
+	font-size: 20px;
+	//text-align: left;
+	//padding: 5px 0px 0px 10px;
+}
+
+#newRoomName{
+	flex: 50%;
+	min-width: 50%;
+}
+
+#botsNumber{
+	flex: 50%;
+	min-width: 50%;
+}
+
+#addRoom{
+	flex-grow: 1;
 }
 
 .deleteRoomLink:hover{

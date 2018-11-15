@@ -1,10 +1,11 @@
 'use strict'
 
-const amqp = require('amqplib');
+const amqp = require('amqplib'),
+	  child_process = require('child_process');
 
 const roomName = process.argv[2];
 
-var conn, channel, ch, cycleNumber = 0;
+var conn, channel, ch;
 
 const mapXSize = 1200;
 const mapYSize = 900;
@@ -15,9 +16,11 @@ const speed = 10;
 const bulletSpeed = 30;
 const blastRadius = 50;
 const reloadingTime = 50;
+
 var players = [];
 var walls = [];
 var bullets = [];
+var bots = [];
 
 walls.push({x1: -50, y1: -50, x2: 5, y2: 950});
 walls.push({x1: 1195, y1: -50, x2: 1250, y2: 950});
@@ -25,15 +28,15 @@ walls.push({x1: -50, y1: -50, x2: 1250, y2: 5});
 walls.push({x1: -50, y1: 895, x2: 1250, y2: 950});
 
 class Player {
-	constructor({score = 0, x = 100, y = 100, id, username}){
+	constructor({score = 0, x1, y1, x2, y2, id, username, direction}){
 		this.id = id;
 		this.username = username;
 		this.score = score;
-		this.x1 = x;
-		this.y1 = y;
-		this.x2 = x + playerWidth;
-		this.y2 = y + playerLength;
-		this.direction = 'up';
+		this.x1 = x1;
+		this.y1 = y1;
+		this.x2 = x2;
+		this.y2 = y2;
+		this.direction = direction;
 		this.isRunning = false;
 		this.newDirection = '';
 		this.firing = false;
@@ -57,8 +60,8 @@ function respawnPlayer(index){
 	console.log('respawn player');
 	var x1, y1, x2, y2;
 	while (true) {
-		x1 = getRndInteger(0, mapXSize);
-		y1 = getRndInteger(0, mapYSize);
+		x1 = getRndInteger(playerLength, mapXSize-playerLength);
+		y1 = getRndInteger(playerLength, mapYSize-playerLength);
 		x2 = x1 + playerWidth;
 		y2 = y1 + playerLength;
 		if (!isOverlappingWithAWall(x1, y1, x2, y2) && !isOvelappingWithOtherPlayers(x1, y1, x2, y2, -1))
@@ -84,14 +87,14 @@ async function processMessage(msg) {
 				console.log('spawn player');
 				var x1, y1, x2, y2;
 				while (true) {
-					x1 = getRndInteger(0, mapXSize);
-					y1 = getRndInteger(0, mapYSize);
+					x1 = getRndInteger(playerLength, mapXSize-playerLength);
+					y1 = getRndInteger(playerLength, mapYSize-playerLength);
 					x2 = x1 + playerWidth;
 					y2 = y1 + playerLength;
 					if (!isOverlappingWithAWall(x1, y1, x2, y2) && !isOvelappingWithOtherPlayers(x1, y1, x2, y2, -1))
 						break;
 				}
-				players.push(new Player({id: data.id, username: data.username, x1: x1, y1: y1, x2: x2, y2: y2}));
+				players.push(new Player({id: data.id, username: data.username, x1: x1, y1: y1, x2: x2, y2: y2, direction: 'up'}));
 				break;
 			case 'despawn player':
 				console.log('despawn player');
@@ -125,8 +128,20 @@ async function processMessage(msg) {
 						break;
 					}
 				break;
+			case 'add bot':
+				console.log('adding new bot');
+				const botName = 'bot' + bots.length;
+				child_process.spawn(process.argv[0], ['bot.js', roomName, botName], {
+					detached: true,
+					shell: true
+				});
+				bot.push(botName);
 			case 'stop':
 				console.log('stopping the game');
+				for (var i = 0; i < bots.length; i++){
+					await ch.assertQueue('game/' + roomName + '/bots/' + bots[i], {durable: false});
+					await ch.sendToQueue('game/' + roomName + '/bots/' + bots[i], Buffer.from(JSON.stringify({command: 'stop'})));
+				}
 				await ch.close();
 				await conn.close();
 				process.exit(0);
