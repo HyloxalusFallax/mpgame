@@ -60,6 +60,9 @@ socket.on('registration', (msg) => {
 });
 
 socket.on('post message', (msg) => {
+	console.log(allMessages.length);
+	//if (allMessages.length > 100)
+	//	allMessages.splice(0, 10);
 	allMessages.push(msg);
 	fillChat();
 });
@@ -135,10 +138,11 @@ function fillStats(){
 	const stat = $('<div></div>').attr('class', 'entry');
 	const cannon = $('<div></div>').text('cannon');
 	var reload = $('<div></div>');
-	if (players[playerIndex].reload != '0')
-		reload.attr('style', 'color: red').text('reloading (' + players[playerIndex].reload + ')');
-	else
-		reload.attr('style', 'color: green').text('ready');
+	if(playerIndex !== -1)
+		if (players[playerIndex].reload != '0')
+			reload.attr('style', 'color: red').text('reloading (' + players[playerIndex].reload + ')');
+		else
+			reload.attr('style', 'color: green').text('ready');
 	stat.append(cannon, $('<div></div>').text(':').attr('class', 'divider'), reload);
 	$('#stats').append(stat);
 }

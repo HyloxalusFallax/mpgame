@@ -55,7 +55,7 @@ function getRoomList() {
 }
 
 function submitRoomForm() {
-	const formData = { 'roomName': $('#newRoomName').val() };
+	const formData = { roomName: $('#newRoomName').val().split(' ')[0], botsNumber: $('#botsNumber').val()};
 	$.ajax({
 		type: 'POST',
         url: '/room',

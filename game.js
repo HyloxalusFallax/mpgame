@@ -12,10 +12,10 @@ const mapYSize = 900;
 const playerLength = 60;
 const playerWidth = 30;
 const bulletSize = 10;
-const speed = 10;
-const bulletSpeed = 30;
+const speed = 5;
+const bulletSpeed = 20;
 const blastRadius = 50;
-const reloadingTime = 50;
+const reloadingTime = 20;
 
 var players = [];
 var walls = [];
@@ -50,7 +50,7 @@ async function main() {
 		conn = await amqp.connect('amqp://localhost');
 		channel = await conn.createChannel();
 		await channel.assertQueue('game/' + roomName, {durable: false});
-		await channel.consume('game/' + roomName, processMessage, {noAck: true, exclusive: true});
+		await channel.consume('game/' + roomName, processMessage, {exclusive: true});
 	} catch (err) {
 		console.log(err);
 	}
@@ -130,23 +130,29 @@ async function processMessage(msg) {
 				break;
 			case 'add bot':
 				console.log('adding new bot');
-				const botName = 'bot' + bots.length;
+				const botName = 'Bot' + bots.length;
 				child_process.spawn(process.argv[0], ['bot.js', roomName, botName], {
 					detached: true,
 					shell: true
 				});
-				bot.push(botName);
+				bots.push(botName);
+				const message = {room: roomName, body: 'Bot ' + botName + ' has been added', date: new Date()};
+				await ch.assertQueue('chat/' + roomName, {durable: false});
+				await ch.sendToQueue('chat/' + roomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
+				break;
 			case 'stop':
 				console.log('stopping the game');
 				for (var i = 0; i < bots.length; i++){
 					await ch.assertQueue('game/' + roomName + '/bots/' + bots[i], {durable: false});
 					await ch.sendToQueue('game/' + roomName + '/bots/' + bots[i], Buffer.from(JSON.stringify({command: 'stop'})));
 				}
+				await ch.ackAll();
 				await ch.close();
 				await conn.close();
 				process.exit(0);
 				break;
 		}
+		await ch.ackAll();
 	} catch (err) {
 		console.log(err);
 	}
@@ -278,13 +284,13 @@ function detonateBullet(i){
 		const playerCenterX = players[j].x1 + (players[j].x2 - players[j].x1) / 2;
 		const playerCenterY = players[j].y1 + (players[j].y2 - players[j].y1) / 2;
 		if (distance(bullets[i].x, bullets[i].y, playerCenterX, playerCenterY) <= blastRadius){
-			if(players[playerIndex].id != players[j].id)
+			//if(players[playerIndex].id != players[j].id)
 				players[playerIndex].score += 100;
 			players[j].score -= 100;
 			respawnPlayer(j);
-			channel.assertQueue('chat/' + roomName, {durable: false});
-			const message = {room: roomName, body: 'Player ' + players[playerIndex].username + ' killed player ' + players[j].username, date: new Date()}
-			channel.sendToQueue('chat/' + roomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
+			//channel.assertQueue('chat/' + roomName, {durable: false});
+			//const message = {room: roomName, body: 'Player ' + players[playerIndex].username + ' killed player ' + players[j].username, date: new Date()}
+			//channel.sendToQueue('chat/' + roomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
 			//console.log('Hasta la vista, baby');
 		}
 	}
@@ -314,7 +320,7 @@ function gameCycle() {
 		for (var i = 0; i < bullets.length; i++){
 			var newSpeed = bulletSpeed;
 			while((!moveBullet(i, newSpeed))){
-				if (newSpeed === 1){
+				if (newSpeed === speed+1){
 					detonateBullet(i);
 					break;
 				}
@@ -331,6 +337,10 @@ function gameCycle() {
 		} 
 		channel.assertQueue('mainServer', {durable: false});
 		channel.sendToQueue('mainServer', Buffer.from(JSON.stringify({players: safePlayers, bullets: safeBullets, walls: walls, room: roomName, command: 'game update'})));
+		for (var i = 0; i < bots.length; i++){
+			channel.assertQueue('game/' + roomName + '/bots/' + bots[i], {durable: false});
+			channel.sendToQueue('game/' + roomName + '/bots/' + bots[i], Buffer.from(JSON.stringify({players: players, bullets: safeBullets, walls: walls, room: roomName, command: 'game update'})));
+		}
 		setTimeout(gameCycle, 30);
 	} catch (err) {
 		console.log(err);

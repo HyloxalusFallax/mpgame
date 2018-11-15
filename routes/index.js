@@ -38,6 +38,7 @@ router.get('/', function(req, res, next) {
 router.post('/room', async (req, res) => {
 	try {
 		const newRoomName = req.body.roomName;
+		const botsNumber = Number(req.body.botsNumber);
 		if (router.use.rooms.length > router.use.rooms_limit) {
 			res.status(400).json({error: 'Too much rooms!'}); 
 		} else {
@@ -54,20 +55,27 @@ router.post('/room', async (req, res) => {
 				if (!is_unique) {
 					res.status(400).send({error: 'Room with this name already exists!'});
 				} else {
-					child_process.spawn(process.argv[0], ['chat.js', newRoomName], {
-						detached: true,
-						shell: true
-					});
-					child_process.spawn(process.argv[0], ['game.js', newRoomName], {
-						detached: true,
-						shell: true
-					});
-					const ch = await router.use.channel;
-					ch.assertQueue('chat/' + newRoomName, {durable: false});
-					const message = new router.use.Message({body: 'Room ' + newRoomName + ' has been created', room: newRoomName});
-					ch.sendToQueue('chat/' + newRoomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
-					router.use.rooms.push({name: newRoomName, players: []});
-					res.sendStatus(201);
+					if ((botsNumber > router.use.players_limit) && (botsNumber < 0)){
+						res.status(400).send({error: 'Number of bots is incorrect!'});
+					} else {
+						child_process.spawn(process.argv[0], ['chat.js', newRoomName], {
+							detached: true,
+							shell: true
+						});
+						child_process.spawn(process.argv[0], ['game.js', newRoomName], {
+							detached: true,
+							shell: true
+						});
+						const ch = await router.use.channel;
+						await ch.assertQueue('chat/' + newRoomName, {durable: false});
+						const message = new router.use.Message({body: 'Room ' + newRoomName + ' has been created', room: newRoomName});
+						await ch.sendToQueue('chat/' + newRoomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
+						router.use.rooms.push({name: newRoomName, players: []});
+						await ch.assertQueue('game/' + newRoomName, {durable: false});
+						for (var i = 0; i < botsNumber; i++)
+							await ch.sendToQueue('game/' + newRoomName, Buffer.from(JSON.stringify({command: 'add bot'})));
+						res.sendStatus(201);
+					}
 				}
 			}
 		}
