@@ -131,7 +131,7 @@ async function processMessage(msg) {
 			case 'add bot':
 				console.log('adding new bot');
 				const botName = 'Bot' + bots.length;
-				child_process.spawn(process.argv[0], ['bot.js', roomName, botName], {
+				child_process.spawn('node', ['bot.js', roomName, botName], {
 					detached: true,
 					shell: true
 				});

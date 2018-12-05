@@ -58,11 +58,11 @@ router.post('/room', async (req, res) => {
 					if ((botsNumber > router.use.players_limit) && (botsNumber < 0)){
 						res.status(400).send({error: 'Number of bots is incorrect!'});
 					} else {
-						child_process.spawn(process.argv[0], ['chat.js', newRoomName], {
+						child_process.spawn('node', ['chat.js', newRoomName], {
 							detached: true,
 							shell: true
 						});
-						child_process.spawn(process.argv[0], ['game.js', newRoomName], {
+						child_process.spawn('node', ['game.js', newRoomName], {
 							detached: true,
 							shell: true
 						});
