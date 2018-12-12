@@ -113,9 +113,9 @@ socket.on('game update', function(data) {
 });
 
 function fillLeaderboard(){
-	players.sort((a, b) => {
-		return a.score < b.score;
-	});
+	//players.sort((a, b) => {
+	//	return a.score < b.score;
+	//});
 	$('#leaderboard').empty();
 	for (var i = 0; i < players.length; i++)
 		addLeaderboardEntry(players[i]);
@@ -168,7 +168,10 @@ function update(){
 			context.fillText(players[i].username, players[i].x1 + playerLength/2 - cannonLength/2, players[i].y1 - 10);
 		else if (players[i].direction === 'left')
 			context.fillText(players[i].username, players[i].x1 + playerLength/2 + cannonLength/2, players[i].y1 - 10);
-		context.fillStyle = "#223709";
+		if (players[i].shielded == true)
+			context.fillStyle = "Green"
+		else
+			context.fillStyle = "#223709";
 		switch (players[i].direction){
 			case 'up':
 				context.fillRect(players[i].x1, players[i].y1 + cannonLength, playerWidth, playerLength - cannonLength);
@@ -228,6 +231,8 @@ $(document).keydown((event) => {
 		case 32: // SPACE
 			socket.emit('controls update', {controls: 'fire', room: roomName});
 			break;
+		case 69:
+			socket.emit('controls update', {controls: 'shield', room: roomName});
 	}
 });
 
