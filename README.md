@@ -7,7 +7,7 @@ To run this project on your local machine you will need:
 2. [MongoDB](https://www.mongodb.com/download-center/community)
 3. [RabbitMQ](https://www.rabbitmq.com/download.html)
 ### Installing
-Clone or download repository. Than install all dependencies:
+Clone or download repository. Than you need to install all dependencies:
 ```
 npm install
 ```
