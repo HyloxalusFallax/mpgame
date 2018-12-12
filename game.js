@@ -84,7 +84,7 @@ function respawnPlayer(index){
 	players[index].reload = 0;
 	players[index].isRunning = false;
 	players[index].health = 100;
-	players[index].score = 100;
+	//players[index].score = 100;
 	players[index].shielded = false;
 	players[index].shieldTimer = 0
 	players[index].cooldown = 0;
@@ -374,7 +374,7 @@ function gameCycle() {
 		}
 		var safePlayers = [];
 		for (var i = 0; i < players.length; i++) {
-			safePlayers.push({username: players[i].username, direction: players[i].direction, x1: players[i].x1, y1: players[i].y1, x2: players[i].x2, y2: players[i].y2, score: players[i].score, reload: players[i].reload, health: players[i].health, shielded: players[i].shielded})
+			safePlayers.push({username: players[i].username, direction: players[i].direction, x1: players[i].x1, y1: players[i].y1, x2: players[i].x2, y2: players[i].y2, score: players[i].score, reload: players[i].reload, health: players[i].health, shielded: players[i].shielded, cooldown: players[i].cooldown})
 		}
 		var safeBullets = [];
 		for (var i = 0; i < bullets.length; i++) {

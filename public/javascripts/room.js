@@ -135,16 +135,26 @@ function fillStats(){
 		if (username === players[i].username)
 			playerIndex = i;
 	$('#stats').empty();
-	const stat = $('<div></div>').attr('class', 'entry');
+	const stat1 = $('<div></div>').attr('class', 'entry');
+	const stat2 = $('<div></div>').attr('class', 'entry');
 	const cannon = $('<div></div>').text('cannon');
 	var reload = $('<div></div>');
+	const shield = $('<div></div>').text('shield');
+	var cooldown = $('<div></div>');
 	if(playerIndex !== -1)
 		if (players[playerIndex].reload != '0')
 			reload.attr('style', 'color: red').text('reloading (' + players[playerIndex].reload + ')');
 		else
 			reload.attr('style', 'color: green').text('ready');
-	stat.append(cannon, $('<div></div>').text(':').attr('class', 'divider'), reload);
-	$('#stats').append(stat);
+		if (players[playerIndex].cooldown != '0')
+			cooldown.attr('style', 'color: red').text('cooldown (' + players[playerIndex].cooldown + ')');
+		else
+			cooldown.attr('style', 'color: green').text('ready');
+	stat1.append(cannon, $('<div></div>').text(':').attr('class', 'divider'), reload);
+	stat2.append(shield, $('<div></div>').text(':').attr('class', 'divider'), cooldown);
+	$('#stats').append(stat1);
+	$('#stats').append(stat2);
+
 }
 
 function update(){
