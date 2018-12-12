@@ -374,7 +374,7 @@ function gameCycle() {
 		}
 		var safePlayers = [];
 		for (var i = 0; i < players.length; i++) {
-			safePlayers.push({username: players[i].username, direction: players[i].direction, x1: players[i].x1, y1: players[i].y1, x2: players[i].x2, y2: players[i].y2, score: players[i].score, reload: players[i].reload})
+			safePlayers.push({username: players[i].username, direction: players[i].direction, x1: players[i].x1, y1: players[i].y1, x2: players[i].x2, y2: players[i].y2, score: players[i].score, reload: players[i].reload, health: players[i].health})
 		}
 		var safeBullets = [];
 		for (var i = 0; i < bullets.length; i++) {
