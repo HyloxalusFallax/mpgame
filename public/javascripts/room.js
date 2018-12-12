@@ -113,9 +113,9 @@ socket.on('game update', function(data) {
 });
 
 function fillLeaderboard(){
-	players.sort((a, b) => {
-		return a.score < b.score;
-	});
+	//players.sort((a, b) => {
+	//	return a.score < b.score;
+	//});
 	$('#leaderboard').empty();
 	for (var i = 0; i < players.length; i++)
 		addLeaderboardEntry(players[i]);
@@ -161,14 +161,28 @@ function update(){
 	for (var i = 0; i < players.length; i++) {
 		context.fillStyle = "silver";
 		context.textAlign = "center";
-		context.font = "10px Arial";
-		if ((players[i].direction === 'up') || (players[i].direction === 'down'))
-			context.fillText(players[i].username, players[i].x1 + playerWidth/2 , players[i].y1 - 10);
-		else if (players[i].direction === 'right')
-			context.fillText(players[i].username, players[i].x1 + playerLength/2 - cannonLength/2, players[i].y1 - 10);
-		else if (players[i].direction === 'left')
-			context.fillText(players[i].username, players[i].x1 + playerLength/2 + cannonLength/2, players[i].y1 - 10);
-		context.fillStyle = "#223709";
+		context.font = "15px Arial";
+		if ((players[i].direction === 'up') || (players[i].direction === 'down')){
+			context.fillText(players[i].username, players[i].x1 + playerWidth/2 , players[i].y1 - 25);
+			context.fillStyle = "green";
+			context.fillText(players[i].health, players[i].x1 + playerWidth/2 , players[i].y1 + 100);
+		}
+		else if (players[i].direction === 'right'){
+			context.fillStyle = "silver";
+			context.fillText(players[i].username, players[i].x1 + playerLength/2 - cannonLength/2, players[i].y1 - 25);
+			context.fillStyle = "green";
+			context.fillText(players[i].health,  players[i].x1 + playerLength/2 - cannonLength/2,  players[i].y1 + 100);
+		}
+		else if (players[i].direction === 'left'){
+			context.fillStyle = "silver";
+			context.fillText(players[i].username, players[i].x1 + playerLength/2 + cannonLength/2, players[i].y1 - 25);
+			context.fillStyle = "green";
+			context.fillText(players[i].health, players[i].x1 + playerLength/2 + cannonLength/2, players[i].y1 + 100);
+		}
+		if (players[i].shielded == true)
+			context.fillStyle = "Blue"
+		else
+			context.fillStyle = "#223709";
 		switch (players[i].direction){
 			case 'up':
 				context.fillRect(players[i].x1, players[i].y1 + cannonLength, playerWidth, playerLength - cannonLength);
@@ -228,6 +242,8 @@ $(document).keydown((event) => {
 		case 32: // SPACE
 			socket.emit('controls update', {controls: 'fire', room: roomName});
 			break;
+		case 69:
+			socket.emit('controls update', {controls: 'shield', room: roomName});
 	}
 });
 
