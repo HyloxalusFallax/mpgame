@@ -11,7 +11,7 @@ var controls = '';
 
 var players = [];
 
-const shootingDistance = 200,
+const shootingDistance = 1000,
 	  playerLength = 60,
 	  playerWidth = 30,
 	  bulletSize = 10;
