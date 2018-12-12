@@ -7,6 +7,7 @@ const roomName = process.argv[2];
 
 var conn, channel, ch;
 
+//Global values
 const mapXSize = 1200;
 const mapYSize = 900;
 const playerLength = 60;
@@ -27,6 +28,7 @@ walls.push({x1: 1195, y1: -50, x2: 1250, y2: 950});
 walls.push({x1: -50, y1: -50, x2: 1250, y2: 5});
 walls.push({x1: -50, y1: 895, x2: 1250, y2: 950});
 
+//Both player nad bots
 class Player {
 	constructor({score = 100, x1, y1, x2, y2, id, username, direction}){
 		this.id = id;
@@ -60,6 +62,7 @@ async function main() {
 	}
 };
 
+//Respawns player with default parameters
 function respawnPlayer(index){
 	console.log('respawn player');
 	var x1, y1, x2, y2;
@@ -172,6 +175,7 @@ async function processMessage(msg) {
 	}
 }
 
+//Moves Player. look up contorls in room.js
 function movePlayer(i, speed){
 	var newX1 = players[i].x1, newY1 = players[i].y1, newX2 = players[i].x2, newY2 = players[i].y2;
 	switch (players[i].direction) {
@@ -256,6 +260,8 @@ function fire(i){
 			break;
 	}
 }
+
+//Makes player temporaly invurnable
 function shield(i){
 	players[i].shielded = true;
 	players[i].cooldown = 1000;
@@ -294,6 +300,7 @@ function distance (x, y, sx, sy){
 	return Math.sqrt(Math.pow((x - sx), 2) + Math.pow((y - sy), 2));
 }
 
+//detonates bullet with set blast radius. Also modifeis it's speed.
 function detonateBullet(i, speed){
 	var playerIndex = -1;
 	for (var j = 0; j < players.length; j++)
@@ -319,6 +326,7 @@ function detonateBullet(i, speed){
 	bullets.splice(i, 1);
 }
 
+//Main game cycle
 function gameCycle() {
 	try {
 		for (var i = 0; i < players.length; i++){
@@ -341,7 +349,6 @@ function gameCycle() {
 					while((!movePlayer(i, newSpeed)) && (newSpeed >= 1)){
 						newSpeed = Math.floor(newSpeed/2);
 					}
-					//console.log('Stop Right There, Criminal Scum!'
 				}
 			}
 		}
