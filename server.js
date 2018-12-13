@@ -9,7 +9,7 @@ const express = require('express'),
 	  logger = require('morgan'),
 	  cookieParserIO = require('socket.io-cookie'),
 	  amqp = require('amqplib'),
-	  child_process = require('child_process');
+	  чёprocess = require('child_process');
 
 var router = require('./routes/index');
 
