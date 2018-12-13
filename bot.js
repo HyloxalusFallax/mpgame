@@ -44,6 +44,9 @@ async function processMessage(msg) {
 				break;
 			case 'stop':
 				console.log('stopping the bot');
+				await ch.ackAll();
+				console.log("I am the " + botName)
+				await ch.deleteQueue('game/' + roomName + '/bots/' + botName);
 				await ch.close();
 				await conn.close();
 				process.exit(0);

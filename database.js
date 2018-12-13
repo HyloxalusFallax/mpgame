@@ -60,6 +60,7 @@ async function processMessage(msg) {
 			case 'stop':
 				console.log('closing');
 				await channel.close();
+				await channel.deleteQueue('db');
 				await conn.close();
 				process.exit(0);
 				break;

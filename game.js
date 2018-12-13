@@ -148,6 +148,7 @@ async function processMessage(msg) {
 			case 'add bot':
 				console.log('adding new bot');
 				const botName = 'Bot' + bots.length;
+				
 				child_process.spawn('node', ['bot.js', roomName, botName], {
 					detached: true,
 					shell: true
@@ -164,6 +165,7 @@ async function processMessage(msg) {
 					await ch.sendToQueue('game/' + roomName + '/bots/' + bots[i], Buffer.from(JSON.stringify({command: 'stop'})));
 				}
 				await ch.ackAll();
+				await ch.deleteQueue('game/' + roomName);
 				await ch.close();
 				await conn.close();
 				process.exit(0);

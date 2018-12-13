@@ -60,6 +60,7 @@ async function processMessage(msg) {
 				console.log('closing');
 				await ch.assertQueue('db', {durable: false});
 				await ch.sendToQueue('db', Buffer.from(JSON.stringify({room: roomName, command: 'delete room'})));
+				await ch.deleteQueue('chat/' + roomName);
 				await ch.close();
 				await conn.close();
 				process.exit(0);
