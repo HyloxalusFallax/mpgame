@@ -7,6 +7,7 @@ var allMessages = [];
 var players = [];
 var walls = [];
 var bullets = [];
+var explosions = [];
 
 $("#chatForm").submit(event => {
 	event.preventDefault();
@@ -97,6 +98,7 @@ const playerWidth = 30;
 const cannonLength = playerLength * 1/3;
 const cannonWidth = playerWidth * 1/4;
 const bulletSize = 10;
+const explosionSize = 100;
 
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
@@ -109,6 +111,8 @@ socket.on('game update', function(data) {
 	players = data.players;
 	walls = data.walls;
 	bullets = data.bullets;
+	console.log(data.explosions)
+	explosions = data.explosions;
 	update();
 });
 
@@ -165,7 +169,7 @@ function update(){
 	context.fillStyle = "#660000";
 	for (var i = 0; i < bullets.length; i++) {
 		context.beginPath();
-		context.arc(bullets[i].x+bulletSize/2, bullets[i].y+bulletSize/2, bulletSize/2, 0, 2 * Math.PI, false);
+		context.arc(bullets[i].x, bullets[i].y, bulletSize/2, 0, 2 * Math.PI, false);
 		context.fill();
 	}
 	for (var i = 0; i < players.length; i++) {
@@ -218,7 +222,12 @@ function update(){
 				break;
 		}
 	}
-
+	for (var i = 0; i < explosions.length; i++){
+		context.fillStyle = 'rgba(255, 255, 0, ' + explosions[i].remaining/10 + ')';
+		context.beginPath();
+		context.arc(explosions[i].x, explosions[i].y, explosionSize/2, 0, 2 * Math.PI, false);
+		context.fill();
+	}
 	context.fillStyle = "#745907";
 	for (var i = 0; i < walls.length; i++) {
 		context.fillRect(walls[i].x1, walls[i].y1, walls[i].x2-walls[i].x1, walls[i].y2-walls[i].y1);
