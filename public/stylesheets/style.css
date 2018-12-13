@@ -122,8 +122,8 @@ label{
 }
 
 #chat{
-	flex: 20%;
-	min-width: 20%;
+	flex: 15%;
+	min-width: 15%;
 	display: flex;
 	flex-flow: column;
 	//height: 80%;
@@ -201,12 +201,12 @@ label{
 	flex-flow: column;
 }
 #stats{
-	flex: 10%;
-	min-height: 10%;
+	flex: 20%;
+	min-height: 20%;
 }
 #leaderboard{
-	flex: 90%;
-	min-height: 90%;
+	flex: 80%;
+	min-height: 80%;
 	border: 1px solid grey;
 	overflow-y: auto;
 }
