@@ -31,7 +31,7 @@ walls.push({x1: -50, y1: 895, x2: 1250, y2: 950});
 
 //Both player nad bots
 class Player {
-	constructor({score = 100, x1, y1, x2, y2, id, username, direction}){
+	constructor({score = 0, x1, y1, x2, y2, id, username, direction}){
 		this.id = id;
 		this.username = username;
 		this.score = score;
@@ -85,7 +85,6 @@ function respawnPlayer(index){
 	players[index].reload = 0;
 	players[index].isRunning = false;
 	players[index].health = 100;
-	//players[index].score = 100;
 	players[index].shielded = false;
 	players[index].shieldTimer = 0
 	players[index].cooldown = 0;
@@ -318,9 +317,12 @@ function detonateBullet(i, speed){
 				//players[playerIndex].score = players[j].health;
 			if (players[j].shielded == false)
 				players[j].health -= Math.floor(speed*10);
-			players[j].score = players[j].health;
-			if (players[j].health <= 0)
+			//players[j].score = players[j].health;
+			if (players[j].health <= 0){
+				players[j].score -= 100;
+				players[playerIndex].score += 100;
 				respawnPlayer(j);
+			}
 			//channel.assertQueue('chat/' + roomName, {durable: false});
 			//const message = {room: roomName, body: 'Player ' + players[playerIndex].username + ' killed player ' + players[j].username, date: new Date()}
 			//channel.sendToQueue('chat/' + roomName, Buffer.from(JSON.stringify({message: message, command: 'post message'})));
