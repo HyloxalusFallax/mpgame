@@ -9,7 +9,7 @@ const express = require('express'),
 	  logger = require('morgan'),
 	  cookieParserIO = require('socket.io-cookie'),
 	  amqp = require('amqplib'),
-	  child_process = require('child_process');
+	  чёprocess = require('child_process');
 
 var router = require('./routes/index');
 
@@ -203,7 +203,7 @@ async function processMessage(msg) {
 				io.to(data.client).emit('fetched chat', data.result);
 				break;
 			case 'game update':
-				io.to(data.room).emit('game update', {players: data.players, walls: data.walls, bullets: data.bullets});
+				io.to(data.room).emit('game update', {players: data.players, walls: data.walls, bullets: data.bullets, explosions: data.explosions});
 				break;
 		}
 	} catch(err) {
