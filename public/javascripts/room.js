@@ -176,9 +176,17 @@ function update(){
 		context.fillStyle = "silver";
 		context.textAlign = "center";
 		context.font = "15px Arial";
+		var colorHealth = "green"
+		if (players[i].health > 66)
+			colorHealth = "green"
+		else if (players[i].health > 33 & players[i].health <= 66)
+			colorHealth = "yellow"
+		else if (players[i].health <= 33)
+			colorHealth = "red"
+			
 		if ((players[i].direction === 'up') || (players[i].direction === 'down')){
 			context.fillText(players[i].username, players[i].x1 + playerWidth/2 , players[i].y1 - 25);
-			context.fillStyle = "green";
+			context.fillStyle = colorHealth;
 			context.fillRect(players[i].x1 + playerWidth/2 - playerLength/2, players[i].y1 - 17, playerLength * (players[i].health/100), 12);
 			context.fillStyle = "silver";
 			context.fillText(players[i].health, players[i].x1 + playerWidth/2 , players[i].y1 - 5);
@@ -186,7 +194,7 @@ function update(){
 		else if (players[i].direction === 'right'){
 			context.fillStyle = "silver";
 			context.fillText(players[i].username, players[i].x1 + playerLength/2 - cannonLength/2, players[i].y1 - 25);
-			context.fillStyle = "green";
+			context.fillStyle = colorHealth;
 			context.fillRect(players[i].x1 - cannonLength/2, players[i].y1 - 17, playerLength * (players[i].health/100), 12);
 			context.fillStyle = "silver";
 			context.fillText(players[i].health,  players[i].x1 + playerLength/2 - cannonLength/2,  players[i].y1 - 5);
@@ -194,7 +202,7 @@ function update(){
 		else if (players[i].direction === 'left'){
 			context.fillStyle = "silver";
 			context.fillText(players[i].username, players[i].x1 + playerLength/2 + cannonLength/2, players[i].y1 - 25);
-			context.fillStyle = "green";
+			context.fillStyle = colorHealth;
 			context.fillRect(players[i].x1 + cannonLength/2, players[i].y1 - 17, playerLength * (players[i].health/100), 12);
 			context.fillStyle = "silver";
 			context.fillText(players[i].health, players[i].x1 + playerLength/2 + cannonLength/2, players[i].y1 - 5);
